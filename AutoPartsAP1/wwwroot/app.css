@@ -58,3 +58,160 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/*Css del proyecto*/
+
+/* Estilo base para los toasts */
+.blazored-toast {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-left: 5px solid #281e71;
+    border-top: 5px solid #281e71;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Colores para blazored toasts*/
+.blazored-toast-success,
+.blazored-toast-error,
+.blazored-toast-info,
+.blazored-toast-warning {
+    border-left-color: #281e71 !important;
+    border-top-color: #281e71 !important;
+}
+
+
+/* Css para el componente Login */
+body {
+    background: linear-gradient(180deg, #e0f2f7 0%, #2D2D47 70%);
+    min-height: 100vh;
+    margin: 0;
+    background-attachment: fixed;
+    background-size: cover;
+    overflow-x: hidden;
+    font-family: 'Inter', sans-serif;
+}
+
+    /* Opcional: Un patrón sutil de puntos o líneas para añadir textura discreta */
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: radial-gradient(circle, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+        background-size: 25px 25px;
+        opacity: 0.8;
+        z-index: -1;
+        pointer-events: none;
+    }
+
+/* Estilos para el contenedor del login para que se integre bien con el fondo */
+.container.vh-100.d-flex.justify-content-center.align-items-center {
+    position: relative;
+    z-index: 1;
+    padding: 20px;
+}
+
+/* Ajustes para la tarjeta de login para que resalte sobre el fondo */
+.login-container {
+    background-color: rgba(255, 255, 255, 0.98);
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    padding: 40px;
+    border: 1px solid rgba(220, 220, 220, 0.6);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+    /* Efecto sutil al pasar el ratón sobre la tarjeta de login (opcional) */
+    .login-container:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Ajustes para los elementos del formulario dentro de la tarjeta */
+    .login-container .form-control-lg {
+        border-radius: 10px;
+        padding: 14px 18px;
+        border: 1px solid #d1d5db;
+        background-color: #f9fafb;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+
+        .login-container .form-control-lg:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+            background-color: #ffffff;
+        }
+
+    .login-container .btn-primary.btn-lg {
+        border-radius: 10px;
+        padding: 14px 0;
+        font-weight: 600;
+        background-color: #1379F2;
+        border-color: #6366f1;
+        transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .login-container .btn-primary.btn-lg:hover {
+            background-color: #1379F2;
+            border-color: #1379F2;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+    .login-container .link-primary {
+        color: #1379F2 !important;
+        text-decoration: none;
+        transition: color 0.2s ease, text-decoration 0.2s ease;
+    }
+
+        .login-container .link-primary:hover {
+            color: #1379F2 !important;
+            text-decoration: underline;
+        }
+
+    /* Estilos para el texto y el logo dentro de la tarjeta de login */
+    .login-container .fa-crow {
+        color: #1379F2;
+        font-size: 3.5rem !important;
+    }
+
+    .login-container h1.fw-bold {
+        color: #374151;
+        font-size: 2.5rem;
+    }
+
+    .login-container .titulo {
+        color: #4b5563;
+        font-size: 1.8rem;
+        font-weight: 600;
+    }
+
+    .login-container .form-label,
+    .login-container .form-check-label {
+        font-weight: 500;
+        color: #4b5563;
+    }
+
+    .login-container .text-danger {
+        color: #ef4444;
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+/*Css para el ManageNavMenu*/
+.nav-link:hover {
+    background-color: #2A73E8;
+    transition: background-color 0.2s ease;
+}
+
+.active-nav {
+    background-color: #0d6efd;
+    color: white !important;
+}
+
+    .active-nav i {
+        color: white;
+    }
