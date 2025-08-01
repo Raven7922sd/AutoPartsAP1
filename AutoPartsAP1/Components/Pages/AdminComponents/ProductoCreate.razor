@@ -1,0 +1,163 @@
+﻿@page "/Productos/Create"
+@using Blazored.Toast.Services
+@using AutoPartsAP1.Components.Models;
+@using Microsoft.AspNetCore.Components.Forms
+@inject ProductoService ProductosService
+@inject NavigationManager navigationmanager
+@inject IToastService itoastservice
+@rendermode InteractiveServer
+
+<PageTitle>Crear Producto</PageTitle>
+
+<EditForm Model="productos" OnValidSubmit="Guardar" FormName="Create">
+    <DataAnnotationsValidator />
+
+    <div class="container mt-4">
+        <h3 class="fw-semibold text-center">Crear Nuevo Producto</h3>
+
+        <div class="row mt-4">
+            <div class="col-md-7">
+                <div class="card shadow-lg">
+                    <div class="card-header text-center">
+                        <h5 class="card-title">Detalles del Producto</h5>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Producto Id</strong></label>
+                            <InputNumber class="form-control" @bind-Value="productos.ProductoId" readonly />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Nombre del Producto</strong></label>
+                            <InputText class="form-control" @bind-Value="productos.ProductoNombre" placeholder="Ingrese el nombre" />
+                            <ValidationMessage For="(() => productos.ProductoNombre)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Descripción del Producto</strong></label>
+                            <InputTextArea class="form-control" @bind-Value="productos.ProductoDescripcion" placeholder="Ingrese la descripción" />
+                            <ValidationMessage For="(() => productos.ProductoDescripcion)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Monto (Precio)</strong></label>
+                            <InputNumber class="form-control" step="0.01" @bind-Value="productos.ProductoMonto" />
+                            <ValidationMessage For="(() => productos.ProductoMonto)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Cantidad (Stock)</strong></label>
+                            <InputNumber class="form-control" @bind-Value="productos.ProductoCantidad" />
+                            <ValidationMessage For="(() => productos.ProductoCantidad)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Categor&iacute;a</strong></label>
+                            <InputSelect class="form-select" @bind-Value="productos.Categoria">
+                                <option value="" selected disabled>Seleccione una categoría</option>
+                                <option value="Motocicletas">Motocicletas</option>
+                                <option value="Autos o Veh&iacute;culos Ligeros">Autos o Veh&iacute;culos Ligeros</option>
+                                <option value="Veh&iacute;culos Pesados">Veh&iacute;culos Pesados</option>
+                            </InputSelect>
+                            <ValidationMessage For="(()=>productos.Categoria)" />
+                        </div>
+                    </div>
+
+                    <div class="card-footer text-center">
+                        <span class="btn-group" role="group">
+                            <button type="reset" class="btn btn-outline-primary bi bi-arrow-clockwise" @onclick="Nuevo"> Limpiar</button>
+                            <button type="submit" class="btn btn-outline-success bi bi-floppy"> Guardar</button>
+                            <a href="/Productos/Index" class="btn btn-outline-secondary bi bi-box-arrow-left"> Volver</a>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-5 d-flex justify-content-center align-items-start mt-3 mt-md-0">
+                <div class="card shadow-sm p-4 text-center" style="height: 100%; min-height: 400px; width: 100%;">
+                    <p class="text-muted mb-2">Imagen del Producto</p>
+
+                    @if (productos.ProductoImagen != null)
+                    {
+                        <img src="data:image/png;base64,@Convert.ToBase64String(productos.ProductoImagen)"
+                        class="img-fluid mb-3" alt="Imagen del producto"
+                        style="max-height: 250px; object-fit: contain; width: 100%;" />
+                    }
+                    else
+                    {
+                        <i class="bi bi-image fs-1 text-muted d-block mx-auto mb-3" style="font-size: 100px !important;"></i>
+                    }
+
+                    <p class="text-muted">Subir Imagen</p>
+                    <InputFile OnChange="SubirImagen" accept=".jpg,.jpeg,.png,.gif" />
+                </div>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    private Productos productos { get; set; } = new Productos();
+    private IBrowserFile? selectedImageFile;
+
+    public void Nuevo()
+    {
+        productos = new Productos();
+        selectedImageFile = null;
+    }
+
+    private async Task SubirImagen(InputFileChangeEventArgs e)
+    {
+        selectedImageFile = e.File;
+
+        if (selectedImageFile != null)
+        {
+            if (selectedImageFile.Size > 5 * 1024 * 1024)
+            {
+                itoastservice.ShowError("La imagen no debe exceder los 5MB.");
+                selectedImageFile = null;
+                productos.ProductoImagen = null;
+                return;
+            }
+
+            try
+            {
+                using var stream = new MemoryStream();
+                await selectedImageFile.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024).CopyToAsync(stream);
+                productos.ProductoImagen = stream.ToArray();
+            }
+            catch (Exception ex)
+            {
+                itoastservice.ShowError($"Error al cargar la imagen: {ex.Message}");
+                selectedImageFile = null;
+                productos.ProductoImagen = null;
+            }
+        }
+        else
+        {
+            productos.ProductoImagen = null;
+        }
+    }
+
+    public async Task Guardar()
+    {
+        if (productos == null)
+        {
+            itoastservice.ShowError("Error interno: El producto es nulo.");
+            return;
+        }
+        var guardo = await ProductosService.Guardar(productos);
+
+        if (guardo)
+        {
+            itoastservice.ShowSuccess("Producto guardado correctamente");
+            navigationmanager.NavigateTo("/Productos/Index");
+            Nuevo();
+        }
+        else
+        {
+            itoastservice.ShowError("Error al almacenar el producto");
+        }
+    }
+}
