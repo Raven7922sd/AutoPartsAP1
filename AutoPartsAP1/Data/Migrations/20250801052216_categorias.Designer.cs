@@ -4,6 +4,7 @@ using AutoPartsAP1.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AutoPartsAP1.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250801052216_categorias")]
+    partial class categorias
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,6 +24,23 @@ namespace AutoPartsAP1.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("AutoPartsAP1.Components.Models.Categorias", b =>
+                {
+                    b.Property<int>("CategoriaId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoriaId"));
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("CategoriaId");
+
+                    b.ToTable("Categoria");
+                });
 
             modelBuilder.Entity("AutoPartsAP1.Components.Models.Productos", b =>
                 {
@@ -30,9 +50,8 @@ namespace AutoPartsAP1.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductoId"));
 
-                    b.Property<string>("Categoria")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("CategoriaId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
@@ -58,6 +77,8 @@ namespace AutoPartsAP1.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.HasKey("ProductoId");
+
+                    b.HasIndex("CategoriaId");
 
                     b.ToTable("Producto");
                 });
@@ -347,6 +368,15 @@ namespace AutoPartsAP1.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("AutoPartsAP1.Components.Models.Productos", b =>
+                {
+                    b.HasOne("AutoPartsAP1.Components.Models.Categorias", "Categoria")
+                        .WithMany("Productos")
+                        .HasForeignKey("CategoriaId");
+
+                    b.Navigation("Categoria");
+                });
+
             modelBuilder.Entity("AutoPartsAP1.Components.Models.Usuarios", b =>
                 {
                     b.HasOne("AutoPartsAP1.Data.ApplicationUser", "ApplicationUsers")
@@ -418,6 +448,11 @@ namespace AutoPartsAP1.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("AutoPartsAP1.Components.Models.Categorias", b =>
+                {
+                    b.Navigation("Productos");
                 });
 
             modelBuilder.Entity("AutoPartsAP1.Components.Models.Ventas", b =>
