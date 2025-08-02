@@ -6,16 +6,29 @@ namespace AutoPartsAP1.Components.Models;
 public class VentasDetalles
 {
     [Key]
-    public int DetalleId { get; set; }
+    public int Id { get; set; }
 
-    public double Monto { get; set; }
-
-    public int Cantidad { get; set; }
-
-    public double ValorCobrado { get; set; }
-
+    [Required]
     public int VentaId { get; set; }
+
     [ForeignKey("VentaId")]
-    [InverseProperty("VentasDetalles")]
-    public virtual Ventas Venta { get; set; } = null!;
+    public Ventas Venta { get; set; }
+
+    [Required]
+    public int ProductoId { get; set; }
+
+    [ForeignKey("ProductoId")]
+    public Productos Producto { get; set; }
+
+    
+    [Required]
+    [Range(1, 500000, ErrorMessage = "Cantidad fuera de rango.")]
+    public double Cantidad { get; set; }
+
+    [Required]
+    [Range(0.1, 999999999, ErrorMessage = "Precio inválido.")]
+    public double PrecioUnitario { get; set; }
+
+    [NotMapped]
+    public double Total => Cantidad * PrecioUnitario;
 }
