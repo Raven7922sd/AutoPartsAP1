@@ -1,5 +1,6 @@
 using AutoPartsAP1.Components;
 using AutoPartsAP1.Components.Account;
+using AutoPartsAP1.Components.Service;
 using AutoPartsAP1.Components.Services;
 using AutoPartsAP1.Data;
 using Blazored.Toast;
@@ -19,6 +20,7 @@ builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 builder.Services.AddScoped<ProductoService>();
 builder.Services.AddScoped<CarritoService>();
+builder.Services.AddScoped<VentasService>();
 builder.Services.AddBlazoredToast();
 
 builder.Services.AddAuthentication(options =>

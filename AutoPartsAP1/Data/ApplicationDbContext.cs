@@ -8,7 +8,6 @@ namespace AutoPartsAP1.Data
     public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
     {
         public DbSet<Productos> Producto { get; set; }
-        public DbSet<Usuarios> Usuario { get; set; }
         public DbSet<Ventas> Ventas { get; set; }
         public DbSet<VentasDetalles> VentasDetalle { get; set; }
 
