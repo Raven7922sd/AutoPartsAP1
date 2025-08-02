@@ -1,0 +1,178 @@
+﻿@page "/Ventas/Index"
+@using System.Linq.Expressions
+@using AutoPartsAP1.Components.Models.Paginacion
+@using AutoPartsAP1.Components.Service
+@inject ProductoService productoservices
+@inject VentasService ventaService
+@inject NavigationManager navigationmanager
+@rendermode InteractiveServer
+
+<PageTitle>Ventas Index</PageTitle>
+
+<div class="container">
+	<div class="card shadow-lg">
+		<div class="card-header position-relative text-center">
+			<h4 class="card-title">Consulta de Ventas</h4>
+		</div>
+
+		<div class="card-body">
+			<div class="d-flex justify-content-between align-items-center mb-5">
+				<h5 class="card-title mb-0">Filtros de B&uacute;squeda</h5>
+				<a href="/Ventas/Create" class="btn btn-success">
+					<span class="bi bi-plus-square"></span> Crear
+				</a>
+			</div>
+
+			<div class="row g-3 align-items-end mb-4">
+
+				<div class="col-md-3">
+					<label class="form-label"><strong>Filtrar Por:</strong></label>
+					<InputSelect class="form-select" @bind-Value="Filtro">
+						<option value="" selected disabled>Seleccione una opci&oacute;n</option>
+						<option value="VentaId">Id</option>
+						<option value="ClienteNombre">Cliente</option>
+						<option value="Descripcion">Sistema</option>
+						<option value="Monto">Monto</option>
+					</InputSelect>
+
+					<label class="form-label mt-4"><strong>Desde:</strong></label>
+					<div class="input-group">
+						<span class="input-group-text bi bi-calendar-date"></span>
+						<input type="date" @bind="FechaDesde" class="form-control" />
+					</div>
+				</div>
+
+				<div class="col-md-3">
+					<label class="form-label"><strong>Búsqueda</strong></label>
+					<div class="input-group">
+						<input class="form-control flex-grow-1" @bind-value="ValorFiltro" @oninput="FiltroCambiado" placeholder="Buscar" />
+						<button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
+					</div>
+
+					<div class="col-md-15">
+						<label class="form-label mt-4"><strong>Hasta:</strong></label>
+						<div class="input-group">
+							<span class="input-group-text bi bi-calendar-date-fill"></span>
+							<input type="date" class="form-control" @bind-value="FechaHasta" />
+
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="table-responsive">
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th>Venta Id</th>
+							<th>Usuario</th>
+							<th>Producto</th>
+							<th>Categor&iacute;a</th>
+							<th class="text-start pe-5">Cantidad</th>
+							<th class="ps-5">Monto</th>
+							<th class="ps-4">Fecha de Creación</th>
+							<th>Editar</th>
+						</tr>
+					</thead>
+					<tbody>
+						@if (ResultadoPaginado != null)
+						{
+							foreach (var ventas in ResultadoPaginado.Items)
+							{
+								<tr>
+									<td>@ventas.VentaId</td>
+									<td>@ventas.ApplicationUserId</td>
+									<td>@ventas.VentasDetalles?.FirstOrDefault()?.Producto?.ProductoNombre</td>
+									<td class="text-center pe-5">@ventas.VentasDetalles?.FirstOrDefault()?.Cantidad</td>
+									<td class="text-start ps-4">@(ventas.VentasDetalles?.FirstOrDefault()?.Total.ToString("N2") ?? "0.00")</td>
+									<td class="ps-4">@ventas.Fecha.ToString("dd/MM/yyyy")</td>
+									<td>
+										<a href="Ventas/Edit/@ventas.VentaId" class="btn btn-outline-primary bi bi-pencil-square"></a>
+									</td>
+								</tr>
+							}
+						}
+					</tbody>
+				</table>
+			</div>
+
+			@if (ResultadoPaginado != null && ResultadoPaginado.TotalPaginas > 1)
+			{
+				<nav aria-label="Paginación">
+					<ul class="pagination justify-content-center mt-4">
+						<li class="page-item @(ResultadoPaginado.TienePaginaAnterior ? "" : "disabled")">
+							<button class="page-link" @onclick="() => CambiarPagina(PaginaActual - 1)">Anterior</button>
+						</li>
+
+						@for (int i = 1; i <= ResultadoPaginado.TotalPaginas; i++)
+						{
+							<li class="page-item @(i == PaginaActual ? "active" : "")">
+								<button class="page-link" @onclick="() => CambiarPagina(i)">@i</button>
+							</li>
+						}
+
+						<li class="page-item @(ResultadoPaginado.TienePaginaSiguiente ? "" : "disabled")">
+							<button class="page-link" @onclick="() => CambiarPagina(PaginaActual + 1)">Siguiente</button>
+						</li>
+					</ul>
+				</nav>
+			}
+		</div>
+	</div>
+</div>
+
+@code {
+	private PaginacionResultado<Ventas> ResultadoPaginado { get; set; }
+	private int PaginaActual { get; set; } = 1;
+	private const int TamañoPagina = 5;
+	private CancellationTokenSource? _cts;
+	public string Filtro { get; set; } = string.Empty;
+	public string ValorFiltro { get; set; } = string.Empty;
+	public DateTime? FechaDesde { get; set; }
+	public DateTime? FechaHasta { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		await CargarPagina(PaginaActual);
+	}
+
+	private async Task Buscar()
+	{
+		PaginaActual = 1;
+		await CargarPagina(PaginaActual);
+	}
+
+	private async Task FiltroCambiado(ChangeEventArgs e)
+	{
+		ValorFiltro = e.Value?.ToString() ?? string.Empty;
+
+		_cts?.Cancel();
+		_cts = new CancellationTokenSource();
+
+		try
+		{
+			await Task.Delay(400, _cts.Token);
+
+			await Buscar();
+			StateHasChanged();
+		}
+		catch (TaskCanceledException)
+		{
+		}
+	}
+
+	private async Task CargarPagina(int pagina)
+	{
+		ResultadoPaginado = await ventaService.BuscarVentasAsync(
+		Filtro, ValorFiltro, FechaDesde, FechaHasta, pagina, TamañoPagina);
+		PaginaActual = pagina;
+	}
+
+	private async Task CambiarPagina(int nuevaPagina)
+	{
+		if (nuevaPagina >= 1 && nuevaPagina <= ResultadoPaginado.TotalPaginas)
+		{
+			await CargarPagina(nuevaPagina);
+		}
+	}
+}
