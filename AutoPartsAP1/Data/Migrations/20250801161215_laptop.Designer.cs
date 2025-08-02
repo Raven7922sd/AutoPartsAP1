@@ -4,6 +4,7 @@ using AutoPartsAP1.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AutoPartsAP1.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250801161215_laptop")]
+    partial class laptop
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -62,6 +65,36 @@ namespace AutoPartsAP1.Migrations
                     b.ToTable("Producto");
                 });
 
+            modelBuilder.Entity("AutoPartsAP1.Components.Models.Usuarios", b =>
+                {
+                    b.Property<int>("UsuarioId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UsuarioId"));
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("DireccionUsuario")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaRegistro")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UsuarioNombre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("UsuarioId");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("Usuario");
+                });
+
             modelBuilder.Entity("AutoPartsAP1.Components.Models.Ventas", b =>
                 {
                     b.Property<int>("VentaId")
@@ -70,43 +103,35 @@ namespace AutoPartsAP1.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VentaId"));
 
-                    b.Property<string>("ApplicationUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
 
                     b.HasKey("VentaId");
-
-                    b.HasIndex("ApplicationUserId");
 
                     b.ToTable("Ventas");
                 });
 
             modelBuilder.Entity("AutoPartsAP1.Components.Models.VentasDetalles", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("DetalleId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DetalleId"));
 
-                    b.Property<double>("Cantidad")
-                        .HasColumnType("float");
-
-                    b.Property<double>("PrecioUnitario")
-                        .HasColumnType("float");
-
-                    b.Property<int>("ProductoId")
+                    b.Property<int>("Cantidad")
                         .HasColumnType("int");
+
+                    b.Property<double>("Monto")
+                        .HasColumnType("float");
+
+                    b.Property<double>("ValorCobrado")
+                        .HasColumnType("float");
 
                     b.Property<int>("VentaId")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductoId");
+                    b.HasKey("DetalleId");
 
                     b.HasIndex("VentaId");
 
@@ -325,32 +350,24 @@ namespace AutoPartsAP1.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("AutoPartsAP1.Components.Models.Ventas", b =>
+            modelBuilder.Entity("AutoPartsAP1.Components.Models.Usuarios", b =>
                 {
-                    b.HasOne("AutoPartsAP1.Data.ApplicationUser", "Usuario")
+                    b.HasOne("AutoPartsAP1.Data.ApplicationUser", "ApplicationUsers")
                         .WithMany()
                         .HasForeignKey("ApplicationUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Usuario");
+                    b.Navigation("ApplicationUsers");
                 });
 
             modelBuilder.Entity("AutoPartsAP1.Components.Models.VentasDetalles", b =>
                 {
-                    b.HasOne("AutoPartsAP1.Components.Models.Productos", "Producto")
-                        .WithMany()
-                        .HasForeignKey("ProductoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("AutoPartsAP1.Components.Models.Ventas", "Venta")
                         .WithMany("VentasDetalles")
                         .HasForeignKey("VentaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Producto");
 
                     b.Navigation("Venta");
                 });
