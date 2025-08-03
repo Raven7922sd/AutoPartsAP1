@@ -11,12 +11,14 @@ public class Ventas
 
     public DateTime Fecha { get; set; } =DateTime.Now;
 
-    [Required]
+    [Required(ErrorMessage ="Debe seleccionar un usuario")]
     public string ApplicationUserId { get; set; }
 
     [ForeignKey("ApplicationUserId")]
     public ApplicationUser Usuario { get; set; }
 
     [InverseProperty("Venta")]
-    public virtual ICollection<VentasDetalles> VentasDetalles { get; set; } = new List<VentasDetalles>();
+    public List<VentasDetalles> VentasDetalles { get; set; } = new();
+
+    public double Total { get; set; }
 }
