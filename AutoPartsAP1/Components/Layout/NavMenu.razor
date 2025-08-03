@@ -1,4 +1,6 @@
 ﻿@implements IDisposable
+@attribute [Authorize]
+@attribute [Authorize(Roles="Admin")]
 
 @inject NavigationManager NavigationManager
 
@@ -18,17 +20,30 @@
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="Productos/Index">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Productos
-            </NavLink>
-        </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="Ventas/Index">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Ventas
-            </NavLink>
-        </div>
+        <AuthorizeView Roles="Admin">
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Productos/Index">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Productos
+                    </NavLink>
+                </div>
+
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Ventas/Index">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Ventas
+                    </NavLink>
+                </div>
+
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Servicios/Index">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Servicios
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+
+        
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="auth">
