@@ -6,6 +6,9 @@
 @inject IToastService itoastservice
 @inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment WebHostEnvironment
 @rendermode InteractiveServer
+@attribute [Authorize]
+@attribute [Authorize(Roles = "Admin")]
+
 
 <PageTitle>Editar Producto</PageTitle>
 

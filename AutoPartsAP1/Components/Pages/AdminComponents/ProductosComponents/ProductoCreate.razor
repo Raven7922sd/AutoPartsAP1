@@ -6,6 +6,9 @@
 @inject NavigationManager navigationmanager
 @inject IToastService itoastservice
 @rendermode InteractiveServer
+@attribute [Authorize]
+@attribute [Authorize(Roles = "Admin")]
+
 
 <PageTitle>Crear Producto</PageTitle>
 
@@ -56,6 +59,7 @@
                             <label class="form-label"><strong>Categor&iacute;a</strong></label>
                             <InputSelect class="form-select" @bind-Value="productos.Categoria">
                                 <option value="" selected disabled>Seleccione una categoría</option>
+                                <option value="Uso General">Uso General</option>
                                 <option value="Motocicletas">Motocicletas</option>
                                 <option value="Autos o Veh&iacute;culos Ligeros">Autos o Veh&iacute;culos Ligeros</option>
                                 <option value="Veh&iacute;culos Pesados">Veh&iacute;culos Pesados</option>
