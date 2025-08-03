@@ -1,0 +1,303 @@
+﻿@page "/Ventas/Edit/{VentaId:int}"
+@inject VentasService ventasService
+@inject ProductoService productoService
+@rendermode InteractiveServer
+@inject NavigationManager navigationManager
+@inject IToastService toastService
+
+<PageTitle>Editar Venta</PageTitle>
+
+<EditForm Model="@venta" OnValidSubmit="ActualizarVenta" FormName="VentasEdit">
+	<DataAnnotationsValidator />
+
+	<div class="container">
+		<div class="card shadow-lg">
+			<div class="card-header">
+				<h4 class="card-title text-center">Editar Venta</h4>
+			</div>
+
+			<div class="card-body">
+				<div class="mb-4">
+					<label class="form-label">Id</label>
+					<InputNumber class="form-control" @bind-Value="venta.VentaId" readonly />
+				</div>
+
+				<div class="form-group mb-3">
+					<label>Fecha:</label>
+					<InputDate class="form-control" @bind-Value="venta.Fecha" />
+				</div>
+
+				<div class="border border-success p-3 mt-3">
+					<h5 class="text-center mb-4">Productos Vendidos</h5>
+
+					<div class="input-group input-group-sm mb-3 align-items-center">
+						<span class="input-group-text">Producto:</span>
+						<InputSelect class="form-select" @bind-Value="SelectedProductoId">
+							<option value="0" disabled>Seleccione un producto</option>
+							@foreach (var producto in ProductosDisponibles)
+							{
+								<option value="@producto.ProductoId">@producto.ProductoNombre</option>
+							}
+						</InputSelect>
+
+						<span class="input-group-text ms-2">Cantidad:</span>
+						<InputNumber class="form-control" @bind-Value="CantidadDetalle" />
+
+						<button type="button" class="btn btn-primary ms-2" @onclick="AgregarProductoDetalleService">
+							Agregar
+						</button>
+					</div>
+
+					<table class="table table-bordered mt-4">
+						<thead class="table-light text-center">
+							<tr>
+								<th>Producto</th>
+								<th>Cantidad</th>
+								<th>Total</th>
+								<th>Dirección</th>
+								<th>Remover</th>
+							</tr>
+						</thead>
+						<tbody>
+							@if (venta.VentasDetalles != null && venta.VentasDetalles.Any())
+							{
+								@foreach (var detalle in venta.VentasDetalles)
+								{
+									<tr class="align-middle text-center">
+										<td>@detalle.Producto?.ProductoNombre</td>
+										<td>@detalle.Cantidad</td>
+										<td>@(((detalle.Producto?.ProductoMonto ?? 0) * detalle.Cantidad).ToString("N2"))</td>
+										<td>
+											<InputText class="form-control" @bind-Value="detalle.Pago.Direccion" />
+										</td>
+										<td>
+											<button type="button" class="btn btn-outline-danger" @onclick="@(() => RemoverProductoDetalle(detalle))">
+												<i class="bi bi-trash"></i>
+											</button>
+										</td>
+									</tr>
+								}
+							}
+							else
+							{
+								<tr><td colspan="7" class="text-center">No hay productos agregados al detalle.</td></tr>
+							}
+						</tbody>
+					</table>
+				</div>
+
+				<div class="card-footer text-center mt-3">
+					<div class="btn-group">
+						<a href="/Ventas/Index" class="btn btn-outline-secondary">
+							<span class="bi bi-box-arrow-left"></span> Volver
+						</a>
+						<button type="submit" class="btn btn-outline-success">
+							<i class="bi bi-save"></i> Guardar Cambios
+						</button>
+						<button type="button" class="btn btn-outline-danger" @onclick="MostrarModalEliminarConfirmacion">
+							<i class="bi bi-trash"></i> Eliminar
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</EditForm>
+
+@if (MostrarModalEliminar)
+{
+	<div class="modal fade show d-block bg-opacity-50" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header bg-danger text-white">
+					<h5 class="modal-title">Confirmar Eliminación</h5>
+					<button type="button" class="btn-close" @onclick="CerrarModalEliminar"></button>
+				</div>
+				<div class="modal-body">
+					<p>¿Está seguro de que desea eliminar esta Venta (@venta.VentaId)?</p>
+					<p class="text-danger">Esta acción no se puede deshacer.</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" @onclick="CerrarModalEliminar">Cancelar</button>
+					<button type="button" class="btn btn-danger" @onclick="EliminarVentaConfirmada">Eliminar</button>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+@code {
+	[Parameter] public int VentaId { get; set; }
+	private Ventas venta = new();
+	private List<Productos> ProductosDisponibles = new();
+
+	private int SelectedProductoId { get; set; }
+	private int CantidadDetalle { get; set; }
+	private List<DetalleOriginal> detallesOriginales = new();
+
+	private bool MostrarModalEliminar { get; set; } = false;
+
+	protected override async Task OnInitializedAsync()
+	{
+		ProductosDisponibles = await productoService.Listar(p => true);
+
+		if (VentaId > 0)
+		{
+			var VentaEncontrada = await ventasService.BuscarVentas(VentaId);
+			if (VentaEncontrada != null)
+			{
+				venta = VentaEncontrada;
+
+				foreach (var d in venta.VentasDetalles)
+				{
+					if (d.Pago == null)
+						d.Pago = new PagoModel();
+				}
+
+				detallesOriginales = venta.VentasDetalles
+					.Select(d => new DetalleOriginal
+						{
+							ProductoId = d.ProductoId,
+							Cantidad = d.Cantidad
+						}).ToList();
+			}
+			else
+			{
+				navigationManager.NavigateTo("/Ventas/Index");
+			}
+		}
+		else
+		{
+			navigationManager.NavigateTo("/Ventas/Create");
+		}
+
+		if (venta.VentasDetalles == null)
+		{
+			venta.VentasDetalles = new List<VentasDetalles>();
+		}
+	}
+
+	private async Task ActualizarVenta()
+	{
+		if (venta.VentasDetalles == null || !venta.VentasDetalles.Any())
+		{
+			toastService.ShowWarning("Debe agregar al menos un producto.");
+			return;
+		}
+
+		foreach (var detalle in venta.VentasDetalles)
+		{
+			var original = detallesOriginales.FirstOrDefault(o => o.ProductoId == detalle.ProductoId);
+
+			if (original == null)
+			{
+				var restado = await productoService.RestarExistenciaProductoAsync(detalle.ProductoId, (int)detalle.Cantidad);
+				if (!restado)
+				{
+					toastService.ShowError($"Stock insuficiente para el producto '{detalle.Producto?.ProductoNombre}'");
+					return;
+				}
+				continue; 
+			}
+
+			int diferencia = (int)(detalle.Cantidad - original.Cantidad);
+
+			if (diferencia > 0)
+			{
+				var restado = await productoService.RestarExistenciaProductoAsync(detalle.ProductoId, diferencia);
+				if (!restado)
+				{
+					toastService.ShowError($"No hay suficiente stock para el producto '{detalle.Producto?.ProductoNombre}'");
+					return;
+				}
+			}
+			else if (diferencia < 0)
+			{
+				await productoService.RestaurarExistenciaProductoAsync(detalle.ProductoId, Math.Abs(diferencia));
+			}
+		}
+
+		foreach (var original in detallesOriginales)
+		{
+			if (!venta.VentasDetalles.Any(d => d.ProductoId == original.ProductoId))
+			{
+				await productoService.RestaurarExistenciaProductoAsync(original.ProductoId, (int)original.Cantidad);
+			}
+		}
+
+		var actualizado = await ventasService.Modificar(venta);
+
+		if (actualizado)
+		{
+			toastService.ShowSuccess("Venta actualizada correctamente.");
+			navigationManager.NavigateTo("/Ventas/Index");
+		}
+		else
+		{
+			toastService.ShowError("Ocurrió un error al actualizar la venta.");
+		}
+	}
+
+
+	private async Task AgregarProductoDetalleService()
+	{
+		venta.VentasDetalles ??= new List<VentasDetalles>();
+
+		if (SelectedProductoId <= 0 || CantidadDetalle <= 0)
+		{
+			toastService.ShowWarning("Seleccione un producto y una cantidad válida.");
+			return;
+		}
+
+		bool agregado = await productoService.AgregarProductoDetalle(venta, SelectedProductoId, CantidadDetalle);
+
+		if (agregado)
+		{
+			var nuevo = venta.VentasDetalles.Last();
+			if (nuevo.Pago == null)
+				nuevo.Pago = new PagoModel();
+
+			toastService.ShowSuccess("Producto agregado correctamente.");
+		}
+		else
+		{
+			toastService.ShowError("La cantidad excede el stock disponible.");
+		}
+
+		SelectedProductoId = 0;
+		CantidadDetalle = 0;
+		StateHasChanged();
+	}
+
+	private void RemoverProductoDetalle(VentasDetalles detalleToRemove)
+	{
+		SelectedProductoId = detalleToRemove.ProductoId;
+		CantidadDetalle = (int)detalleToRemove.Cantidad;
+
+		venta.VentasDetalles.Remove(detalleToRemove);
+
+		toastService.ShowInfo("Producto removido del detalle.");
+
+		StateHasChanged();
+	}
+
+	private void MostrarModalEliminarConfirmacion() => MostrarModalEliminar = true;
+
+	private void CerrarModalEliminar() => MostrarModalEliminar = false;
+
+	private async Task EliminarVentaConfirmada()
+	{
+		CerrarModalEliminar();
+
+		bool eliminado = await ventasService.EliminarVentas(venta.VentaId);
+		if (eliminado)
+		{
+			toastService.ShowSuccess("Venta eliminada exitosamente!");
+			navigationManager.NavigateTo("/Ventas/Index");
+		}
+		else
+		{
+			toastService.ShowError("Error al eliminar la Venta.");
+		}
+	}
+}
