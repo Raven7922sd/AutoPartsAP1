@@ -4,6 +4,9 @@
 @rendermode InteractiveServer
 @inject NavigationManager navigationManager
 @inject IToastService toastService
+@attribute [Authorize]
+@attribute [Authorize(Roles = "Admin")]
+
 
 <PageTitle>Editar Venta</PageTitle>
 
