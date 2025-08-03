@@ -99,4 +99,80 @@ public class ProductoService(IDbContextFactory<ApplicationDbContext>DbFactory)
 
         return await query.OrderBy(f => f.Fecha).ToListAsync();
     }
+
+    public async Task<bool> RestarExistenciaProductoAsync(int productoId, int cantidad)
+    {
+        await using var context = await DbFactory.CreateDbContextAsync();
+
+        var producto = await context.Producto.FindAsync(productoId);
+        if (producto == null || producto.ProductoCantidad < cantidad)
+        {
+            return false;
+        }
+
+        producto.ProductoCantidad -= cantidad;
+        await context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> RestaurarExistenciaProductoAsync(int productoId, int cantidad)
+    {
+        await using var context = await DbFactory.CreateDbContextAsync();
+
+        var producto = await context.Producto.FindAsync(productoId);
+        if (producto == null)
+        {
+            return false;
+        }
+
+        producto.ProductoCantidad += cantidad;
+        await context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> AgregarProductoDetalle(Ventas venta, int selectedProductoId, int cantidadDetalle)
+    {
+        if (selectedProductoId == 0 || cantidadDetalle <= 0)
+        {
+            return false;
+        }
+
+        await using var context = await DbFactory.CreateDbContextAsync();
+
+
+        var productoSeleccionado = await context.Producto.AsNoTracking().FirstOrDefaultAsync(p => p.ProductoId == selectedProductoId);
+        if (productoSeleccionado == null)
+        {
+            return false;
+        }
+
+        var currentQuantityInDetails = venta.VentasDetalles
+                                            .Where(d => d.ProductoId == selectedProductoId)
+                                            .Sum(d => d.Cantidad);
+
+        var projectedTotalQuantity = currentQuantityInDetails + cantidadDetalle;
+
+        if (productoSeleccionado.ProductoCantidad < projectedTotalQuantity)
+        {
+            return false;
+        }
+
+        var detalleExistente = venta.VentasDetalles.FirstOrDefault(d => d.ProductoId == selectedProductoId);
+        if (detalleExistente != null)
+        {
+            detalleExistente.Cantidad += cantidadDetalle;
+        }
+        else
+        {
+            var nuevoDetalle = new VentasDetalles
+            {
+                ProductoId = selectedProductoId,
+                Producto = productoSeleccionado,
+                Cantidad = cantidadDetalle, 
+            };
+            venta.VentasDetalles.Add(nuevoDetalle);
+        }
+
+        return true;
+    }
 }
