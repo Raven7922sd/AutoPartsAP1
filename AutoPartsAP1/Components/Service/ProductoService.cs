@@ -53,6 +53,7 @@ public class ProductoService(IDbContextFactory<ApplicationDbContext>DbFactory)
         return await context.Producto.FirstOrDefaultAsync(a => a.ProductoId == productoId);
     }
 
+  
     public async Task<List<Productos>> Listar(Expression<Func<Productos, bool>> criterio)
     {
         await using var context = await DbFactory.CreateDbContextAsync();

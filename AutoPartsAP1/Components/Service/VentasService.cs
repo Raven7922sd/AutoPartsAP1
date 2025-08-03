@@ -28,7 +28,6 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
         using var context = await DbFactory.CreateDbContextAsync();
         context.Ventas.Add(ventas);
 
-        // Resta la cantidad vendida del stock
         foreach (var detalle in ventas.VentasDetalles)
         {
             var producto = await context.Producto.FindAsync(detalle.ProductoId);
@@ -45,8 +44,6 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
     {
         using var context = await DbFactory.CreateDbContextAsync();
 
-        // Aquí puedes manejar la lógica de modificación del stock si lo necesitas
-
         context.Ventas.Update(ventas);
         return await context.SaveChangesAsync() > 0;
     }
@@ -58,7 +55,7 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
         return await context.Ventas
             .Include(v => v.Usuario)
             .Include(v => v.VentasDetalles)
-                .ThenInclude(d => d.Producto)
+            .ThenInclude(d => d.Producto)
             .FirstOrDefaultAsync(v => v.VentaId == Ventaid);
     }
 
@@ -73,7 +70,6 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
         if (venta == null)
             return false;
 
-        // Restablece el stock de productos
         foreach (var detalle in venta.VentasDetalles)
         {
             var producto = await context.Producto.FindAsync(detalle.ProductoId);
@@ -98,6 +94,17 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
             .Include(v => v.VentasDetalles)
                 .ThenInclude(d => d.Producto)
             .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<List<Ventas>> ObtenerVentasPorUsuario(string userId)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.Ventas
+            .Include(v => v.VentasDetalles)
+            .ThenInclude(d => d.Producto)
+            .Where(v => v.ApplicationUserId == userId)
+            .OrderByDescending(v => v.Fecha)
             .ToListAsync();
     }
 
@@ -145,5 +152,13 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
             PaginaActual = pagina,
             TotalPaginas = totalPaginas
         };
+    }
+    public async Task<PagoModel?> GuardarPago(PagoModel pago)
+    {
+        await using var context = await DbFactory.CreateDbContextAsync();
+        context.Pago.Add(pago);
+        var guardado = await context.SaveChangesAsync() > 0;
+
+        return guardado ? pago : null;
     }
 }
