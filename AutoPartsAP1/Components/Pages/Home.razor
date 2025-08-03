@@ -246,10 +246,17 @@
         carritoservice.OnCartChanged -= ActualizarCarrito;
     }
 
-    private void AñadirCarrito(Productos producto)
+    private async Task AñadirCarrito(Productos producto)
     {
-        carritoservice.AddItem(producto);
-        itoastservice.ShowSuccess($"'{producto.ProductoNombre}' añadido al carrito.");
+        var exito = await carritoservice.AddItemConValidacionAsync(producto.ProductoId, 1);
+        if (!exito)
+        {
+            itoastservice.ShowError("No hay suficiente stock para agregar este producto.");
+        }
+        else
+        {
+            itoastservice.ShowSuccess("Producto agregado al carrito.");
+        }
     }
 
     private void ActualizarCarrito()
