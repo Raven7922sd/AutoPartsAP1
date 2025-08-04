@@ -3,49 +3,47 @@
 
 @inject SignInManager<ApplicationUser> SignInManager
 
-
-<div class="card shadow-sm border-0 rounded-4">
-	<div class="card-body px-3 py-4">
-		<ul class="nav flex-column p-3 bg-white shadow rounded-4 border">
-			<li class="nav-item mb-2">
-				<NavLink class="nav-link d-flex align-items-center gap-2 p-3 rounded-pill text-dark fw-semibold"
-						 activeClass="active-nav" href="Account/Manage" Match="NavLinkMatch.All">
+<div class="card shadow-sm border-0 rounded-4 account-nav">
+	<div class="card-body p-4">
+		<ul class="nav flex-column rounded-3 p-0">
+			<li class="account-nav-item">
+				<NavLink class="account-nav-link" activeClass="account-nav-active" href="Account/Manage" Match="NavLinkMatch.All">
 					<i class="bi bi-person-circle fs-5"></i> Perfil
 				</NavLink>
 			</li>
-			<li class="nav-item mb-2">
-				<NavLink class="nav-link d-flex align-items-center gap-2 p-3 rounded-pill text-dark fw-semibold"
-						 activeClass="active-nav" href="Account/Manage/Email">
+			<li class="account-nav-item">
+				<NavLink class="account-nav-link" activeClass="account-nav-active" href="Account/Manage/Email">
 					<i class="bi bi-envelope-fill fs-5"></i> Correo electrónico
 				</NavLink>
 			</li>
-			<li class="nav-item mb-2">
-				<NavLink class="nav-link d-flex align-items-center gap-2 p-3 rounded-pill text-dark fw-semibold"
-						 activeClass="active-nav" href="Account/Manage/ChangePassword">
+			<li class="account-nav-item">
+				<NavLink class="account-nav-link" activeClass="account-nav-active" href="Account/Manage/ChangePassword">
 					<i class="bi bi-shield-lock-fill fs-5"></i> Contraseña
 				</NavLink>
 			</li>
 			@if (hasExternalLogins)
 			{
-				<li class="nav-item mb-2">
-					<NavLink class="nav-link d-flex align-items-center gap-2 p-3 rounded-pill text-dark fw-semibold"
-							 activeClass="active-nav" href="Account/Manage/ExternalLogins">
+				<li class="account-nav-item">
+					<NavLink class="account-nav-link" activeClass="account-nav-active" href="Account/Manage/ExternalLogins">
 						<i class="bi bi-box-arrow-in-right fs-5"></i> Inicios externos
 					</NavLink>
 				</li>
 			}
-			<li class="nav-item mb-2">
-				<NavLink class="nav-link d-flex align-items-center gap-2 p-3 rounded-pill text-dark fw-semibold"
-						 activeClass="active-nav" href="Account/Manage/TwoFactorAuthentication">
+			<li class="account-nav-item">
+				<NavLink class="account-nav-link" activeClass="account-nav-active" href="Account/Manage/TwoFactorAuthentication">
 					<i class="bi bi-shield-lock fs-5"></i> Autenticación 2FA
 				</NavLink>
 			</li>
-			<li class="nav-item mb-2">
-				<NavLink class="nav-link d-flex align-items-center gap-2 p-3 rounded-pill text-dark fw-semibold"
-						 activeClass="active-nav" href="Account/Manage/PersonalData">
-					<i class="bi bi-folder-lock fs-5"></i> Datos personales
+			<li class="account-nav-item">
+				<NavLink class="account-nav-link" activeClass="account-nav-active" href="Account/Manage/PersonalData">
+					<i class="bi bi-credit-card-2-front-fill"></i> Datos personales
 				</NavLink>
 			</li>
+			<li class="account-nav-item">
+				<NavLink class="account-nav-link" activeClass="account-nav-active" href="Account/Manage/Compras">
+					<i class="bi bi-bag-check-fill fs-5"></i> Mis compras
+				</NavLink>
+			</li>			
 		</ul>
 	</div>
 </div>
