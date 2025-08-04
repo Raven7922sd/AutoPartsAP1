@@ -9,9 +9,8 @@
 @attribute [Authorize]
 @attribute [Authorize(Roles = "Admin")]
 
-
 <PageTitle>Editar Producto</PageTitle>
-
+<NavCentral></NavCentral>
 @if (isLoading)
 {
 	<div class="text-center mt-5">
@@ -133,7 +132,7 @@ else
 		</div>
 	</div>
 }
-
+<NavInferior></NavInferior>
 @code {
 	[Parameter]
 	public int ProductoId { get; set; }

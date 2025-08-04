@@ -6,7 +6,7 @@
 @attribute [Authorize(Roles = "Admin")]
 
 <PageTitle>Registro</PageTitle>
-
+<NavCentral></NavCentral>
 <div class="container">
 	<div class="card shadow-lg">
 		<div class="card-header position-relative text-center">
@@ -111,7 +111,7 @@
 		</div>
 	</div>
 </div>
-
+<NavInferior></NavInferior>
 @code {
 	public List<Productos> ListaProductos { get; set; } = new List<Productos>();
 	public string Filtro { get; set; } = string.Empty;
