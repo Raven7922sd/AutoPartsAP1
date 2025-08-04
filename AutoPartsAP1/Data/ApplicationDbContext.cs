@@ -13,6 +13,7 @@ namespace AutoPartsAP1.Data
         public DbSet<VentasDetalles> VentasDetalle { get; set; }
         public DbSet<PagoModel> Pago { get; set; }
         public DbSet<Servicios> Servicio { get; set; }
+        public DbSet<Cita> Citas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
