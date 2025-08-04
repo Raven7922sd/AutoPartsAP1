@@ -219,4 +219,34 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
 
         return await context.SaveChangesAsync() > 0;
     }
+
+    public async Task<bool> InsertarVentaServiciosAsync(Ventas venta, List<Servicios> servicios)
+    {
+        await using var context = await DbFactory.CreateDbContextAsync();
+        await using var transaction = await context.Database.BeginTransactionAsync();
+
+        try
+        {
+            context.Ventas.Add(venta);
+            await context.SaveChangesAsync();
+
+            foreach (var servicio in servicios)
+            {
+                var servicioDb = await context.Servicio.FirstOrDefaultAsync(s => s.ServicioId == servicio.ServicioId);
+                if (servicioDb is not null)
+                {
+                    servicioDb.Solicitados += 1;
+                }
+            }
+
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            return false;
+        }
+    }
 }
