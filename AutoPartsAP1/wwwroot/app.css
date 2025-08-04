@@ -85,7 +85,7 @@ h1:focus {
 
 /* Css para el componente Login */
 body {
-    background: linear-gradient(180deg, #e0f2f7 0%, #2D2D47 70%);
+    background: linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 70%);
     min-height: 100vh;
     margin: 0;
     background-attachment: fixed;
@@ -202,16 +202,237 @@ body {
         margin-top: 0.25rem;
     }
 /*Css para el ManageNavMenu*/
-.nav-link:hover {
-    background-color: #2A73E8;
-    transition: background-color 0.2s ease;
+:root {
+    --account-bg-color: #f8f9fa; 
+    --account-link-color: #495057; 
+    --account-link-hover-bg: #e9ecef;
+    --account-active-bg: #0d6efd; 
+    --account-active-text: #fff; 
 }
 
-.active-nav {
-    background-color: #0d6efd;
-    color: white !important;
+.account-nav {
+    border-radius: 1rem !important;
+    background-color: var(--account-bg-color) !important;
 }
 
-    .active-nav i {
-        color: white;
+    .account-nav .nav {
+        background: transparent !important; 
+        padding: 0 !important;
     }
+
+.account-nav-item {
+    margin-bottom: 0.5rem;
+}
+
+.account-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 0.75rem !important; 
+    text-decoration: none;
+    color: var(--account-link-color);
+    font-weight: 600;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+    .account-nav-link:hover {
+        background-color: var(--account-link-hover-bg);
+        color: var(--account-link-color);
+    }
+
+.account-nav-active {
+    background-color: var(--account-active-bg) !important;
+    color: var(--account-active-text) !important;
+    font-weight: bold !important;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+
+.account-nav-link i {
+    font-size: 1.25rem;
+}
+
+.card {
+
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+    }
+
+
+    .card img {
+       
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .card:hover img {
+        transform: scale(1.05);
+    }
+
+    /*Css para el NAVMENU*/
+
+:root {
+    --menu-bg-color: #212529; 
+    --menu-text-color: #f8f9fa; 
+    --menu-hover-color: #343a40; 
+    --menu-active-color: #0d6efd; 
+    --menu-active-bg-color: #0c4a96;
+}
+
+/* Contenedor principal del menú */
+.menu-container {
+    background-color: var(--menu-bg-color);
+    color: var(--menu-text-color);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 0;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    position: sticky; 
+    top: 0;
+}
+
+/* Cabecera con el logo/título */
+.menu-header {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    border-bottom: 1px solid #495057; 
+    margin-bottom: 1.5rem;
+}
+
+    .menu-header a {
+        color: var(--menu-text-color);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+    }
+
+/* Enlaces del menú (para el NavLink) */
+.menu-links {
+    flex-grow: 1; 
+}
+
+.menu-item {
+    margin-bottom: 0.5rem;
+}
+
+.menu-link,
+.menu-link-button {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    color: var(--menu-text-color);
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    border-radius: 0.5rem; 
+    margin: 0 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+  
+    .menu-link:hover,
+    .menu-link-button:hover {
+        background-color: var(--menu-hover-color);
+        color: var(--menu-text-color);
+    }
+
+ 
+    .menu-link.active {
+        background-color: var(--menu-active-bg-color);
+        color: var(--menu-text-color);
+        border-left: 4px solid var(--menu-active-color);
+        padding-left: calc(1.5rem - 4px); 
+        font-weight: bold;
+    }
+
+
+.menu-link-button {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin: 0 1rem;
+}
+
+
+.menu-item i {
+    font-size: 1.25rem;
+}
+
+
+.profile-section {
+    padding-top: 1.5rem;
+    border-top: 1px solid #495057;
+    margin-top: 1.5rem;
+}
+
+/*Css para el NavCentral*/
+
+/* Estilo para el Hero Section */
+.hero-section {
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1549487771-874b41a94ac8?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
+    background-size: cover;
+    height: 60vh; 
+    margin-bottom: 2rem;
+}
+
+/* Contenedor del carrusel para controlar su tamaño */
+.carousel-container {
+    max-width: 900px; 
+}
+
+/* Tamaño de las imágenes del carrusel */
+.carousel-image {
+    height: 400px;
+    object-fit: cover; 
+}
+
+/* Estilo para las tarjetas de producto */
+.product-img {
+    height: 250px;
+    object-fit: cover;
+}
+
+/* Animaciones */
+.animate__animated {
+    -webkit-animation-duration: 1s;
+    animation-duration: 1s;
+}
+
+.animate__fadeInDown {
+    animation-name: fadeInDown;
+}
+
+.animate__fadeInUp {
+    animation-name: fadeInUp;
+}
+
+.animate__zoomIn {
+    animation-name: zoomIn;
+}
+
+/* Clases de efectos que ya te había dado */
+.hover-shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
+
+.transition {
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+/* Reemplaza los iconos del carrusel con versiones negras */
+.carousel-control-prev-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z'/%3e%3c/svg%3e") !important;
+}
+
+.carousel-control-next-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+}

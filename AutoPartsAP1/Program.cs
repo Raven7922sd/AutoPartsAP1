@@ -22,6 +22,7 @@ builder.Services.AddScoped<ProductoService>();
 builder.Services.AddScoped<CarritoService>();
 builder.Services.AddScoped<VentasService>();
 builder.Services.AddScoped<ComprasService>();
+builder.Services.AddScoped<ServiciosService>();
 builder.Services.AddBlazoredToast();
 
 builder.Services.AddAuthentication(options =>
