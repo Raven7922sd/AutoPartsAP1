@@ -4,7 +4,7 @@
 
 
 <PageTitle>Factura</PageTitle>
-
+<NavCentral></NavCentral>
 @if (venta == null)
 {
     <div class="text-center mt-5">
@@ -25,7 +25,7 @@ else
 
             <hr />
 
-            <h5 class="mb-3">Detalles de la compra</h5>
+            <h5 class="mb-3 text-center">Detalles de la compra</h5>
             <div class="table-responsive">
                 <table class="table table-bordered table-striped rounded-3 overflow-hidden">
                     <thead class="table-dark">
@@ -43,7 +43,7 @@ else
                                 <td>@detalle.Producto?.ProductoNombre</td>
                                 <td>@detalle.Cantidad</td>
                                 <td>RD$ @detalle.PrecioUnitario.ToString("N2")</td>
-                                <td>RD$ @(detalle.Cantidad * detalle.PrecioUnitario).ToString("N2")</td>
+                                <td>RD$ @((detalle.Cantidad * detalle.PrecioUnitario).ToString("N2"))</td>
                             </tr>
                         }
                     </tbody>
@@ -62,6 +62,7 @@ else
         </div>
     </div>
 }
+<NavInferior></NavInferior>
 
 @code {
     [Parameter]

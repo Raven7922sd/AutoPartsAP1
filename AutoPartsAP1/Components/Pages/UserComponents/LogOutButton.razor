@@ -1,0 +1,41 @@
+﻿@inject NavigationManager NavigationManager
+@implements IDisposable
+
+<form action="Account/Logout" method="post">
+    <AntiforgeryToken />
+    <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+    <button type="submit" class="@CssClass">
+        <i class="@IconClass me-1"></i>
+        @LabelText
+    </button>
+</form>
+
+@code {
+    [Parameter]
+    public string? CssClass { get; set; } = "btn btn-outline-light";
+
+    [Parameter]
+    public string? LabelText { get; set; } = "Cerrar Sesión";
+
+    [Parameter]
+    public string? IconClass { get; set; } = "bi-box-arrow-left";
+
+    private string? currentUrl;
+
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}
