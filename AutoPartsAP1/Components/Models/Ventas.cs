@@ -11,7 +11,7 @@ public class Ventas
 
     public DateTime Fecha { get; set; } =DateTime.Now;
 
-    [Required(ErrorMessage ="Debe seleccionar un usuario")]
+    [Required(ErrorMessage ="Debe ingresar un usuario")]
     public string ApplicationUserId { get; set; }
 
     [ForeignKey("ApplicationUserId")]
