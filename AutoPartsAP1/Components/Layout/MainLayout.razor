@@ -1,10 +1,15 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="page">
-     <div class="sidebar">
-       <NavMenu /> 
-    </div> 
 
+    <AuthorizeView Roles="Admin">
+        <Authorized>
+            <div class="sidebar">
+                <NavMenu />
+            </div>
+        </Authorized>
+    </AuthorizeView>
+  
     <main>
 
             @Body
