@@ -4,6 +4,7 @@ using AutoPartsAP1.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AutoPartsAP1.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250803232623_servicios")]
+    partial class servicios
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,43 +24,6 @@ namespace AutoPartsAP1.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("AutoPartsAP1.Components.Models.Cita", b =>
-                {
-                    b.Property<int>("CitaId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CitaId"));
-
-                    b.Property<string>("ApplicationUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ClienteNombre")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CodigoConfirmacion")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Confirmada")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("FechaCita")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ServicioSolicitado")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("CitaId");
-
-                    b.HasIndex("ApplicationUserId");
-
-                    b.ToTable("Citas");
-                });
 
             modelBuilder.Entity("AutoPartsAP1.Components.Models.PagoModel", b =>
                 {
@@ -148,9 +114,6 @@ namespace AutoPartsAP1.Migrations
                     b.Property<double>("DuracionEstimada")
                         .HasColumnType("float");
 
-                    b.Property<DateTime>("FechaServicio")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -162,9 +125,6 @@ namespace AutoPartsAP1.Migrations
                     b.Property<byte[]>("ServicioImagen")
                         .IsRequired()
                         .HasColumnType("varbinary(max)");
-
-                    b.Property<int>("Solicitados")
-                        .HasColumnType("int");
 
                     b.HasKey("ServicioId");
 
@@ -440,17 +400,6 @@ namespace AutoPartsAP1.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("AutoPartsAP1.Components.Models.Cita", b =>
-                {
-                    b.HasOne("AutoPartsAP1.Data.ApplicationUser", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("ApplicationUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("AutoPartsAP1.Components.Models.Ventas", b =>
