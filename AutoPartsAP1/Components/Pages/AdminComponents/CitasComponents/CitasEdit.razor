@@ -1,0 +1,103 @@
+﻿@page "/Citas/Edit/{CitaId:int}"
+@inject CitaService citaService
+@inject NavigationManager navigationManager
+@inject IToastService toastService
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Editar Cita</PageTitle>
+<NavCentral></NavCentral>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg p-4">
+                <h2 class="card-title text-center fw-bold mb-4">Editar Cita #@CitaId</h2>
+
+                @if (cita != null)
+                {
+                    <EditForm Model="cita" OnValidSubmit="GuardarCita">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label for="clienteNombre" class="form-label">Nombre del cliente</label>
+                            <InputText id="clienteNombre" class="form-control" @bind-Value="cita.ClienteNombre" readonly/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="servicio" class="form-label">Servicio a solicitar</label>
+                            <InputText id="servicio" class="form-control" @bind-Value="cita.ServicioSolicitado" readonly/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="fechaCita" class="form-label">Fecha de la cita</label>
+                            <InputDate id="fechaCita" class="form-control" @bind-Value="cita.FechaCita" />
+                        </div>
+
+                        <div class="form-check form-switch mb-4">
+                            <InputCheckbox id="confirmada" class="form-check-input" @bind-Value="cita.Confirmada" />
+                            <label class="form-check-label" for="confirmada">Cita Confirmada</label>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" @onclick="EliminarCita" class="btn btn-danger bi bi-trash"> Eliminar</button>
+                            <button type="submit" class="btn btn-primary bi bi-save"> Guardar Cambios</button>
+                        </div>
+                    </EditForm>
+                }
+                else
+                {
+                    <p class="text-center">Cargando cita...</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<NavInferior></NavInferior>
+@code {
+    [Parameter]
+    public int CitaId { get; set; }
+
+    private Cita? cita;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cita = await citaService.GetCitaByIdAsync(CitaId);
+    }
+
+    private async Task GuardarCita()
+    {
+        if (cita != null)
+        {
+            var exito = await citaService.GuardarCitaAsync(cita);
+            if (exito)
+            {
+                toastService.ShowSuccess("Cita actualizada con éxito.");
+                navigationManager.NavigateTo("/Citas/Index");
+            }
+            else
+            {
+                toastService.ShowError("Ocurrió un error al guardar los cambios.");
+            }
+        }
+    }
+
+    private async Task EliminarCita()
+    {
+        if (cita != null)
+        {
+            var exito = await citaService.EliminarCitaAsync(cita);
+            if (exito)
+            {
+                toastService.ShowSuccess("Cita eliminada con éxito.");
+                navigationManager.NavigateTo("/Citas/Index");
+            }
+            else
+            {
+                toastService.ShowError("Ocurrió un error al eliminar la cita.");
+            }
+        }
+    }
+}
