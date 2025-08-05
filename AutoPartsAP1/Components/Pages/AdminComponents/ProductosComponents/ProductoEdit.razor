@@ -1,0 +1,251 @@
+﻿@page "/Productos/Edit/{ProductoId:int}"
+@using Blazored.Toast.Services
+@using AutoPartsAP1.Components.Models;
+@inject ProductoService ProductosService
+@inject NavigationManager navigationmanager
+@inject IToastService itoastservice
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment WebHostEnvironment
+@rendermode InteractiveServer
+@attribute [Authorize]
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Editar Producto</PageTitle>
+<NavCentral></NavCentral>
+@if (isLoading)
+{
+	<div class="text-center mt-5">
+		<div class="spinner-border text-primary" role="status">
+			<span class="visually-hidden">Cargando...</span>
+		</div>
+	</div>
+}
+else
+{
+	<EditForm Model="productos" OnValidSubmit="Guardar" FormName="Cargar">
+		<DataAnnotationsValidator />
+
+		<div class="container mt-4">
+			<h3 class="fw-semibold text-center">Editar Producto</h3>
+
+			<div class="row mt-4">
+				<div class="col-md-7">
+					<div class="card shadow-lg">
+						<div class="card-header position-relative text-center">
+							<h5 class="card-title">Detalles del Producto</h5>
+						</div>
+
+						<div class="card-body">
+
+							<div class="mb-3">
+								<label class="form-label"><strong>Producto Id</strong></label>
+								<InputNumber class="form-control" @bind-Value="productos.ProductoId" readonly></InputNumber>
+							</div>
+
+							<div class="mb-3">
+								<label class="form-label"><strong>Nombre del Producto</strong></label>
+								<InputText class="form-control" @bind-Value="productos.ProductoNombre" placeholder="Ingrese el nombre"></InputText>
+								<ValidationMessage For="(() => productos.ProductoNombre)"></ValidationMessage>
+							</div>
+
+							<div class="mb-3">
+								<label class="form-label"><strong>Descripción del Producto</strong></label>
+								<InputTextArea class="form-control" @bind-Value="productos.ProductoDescripcion" placeholder="Ingrese la descripción"></InputTextArea>
+								<ValidationMessage For="(() => productos.ProductoDescripcion)"></ValidationMessage>
+							</div>
+
+							<div class="mb-3">
+								<label class="form-label"><strong>Monto (Precio)</strong></label>
+								<InputNumber class="form-control" step="0.01" @bind-Value="productos.ProductoMonto"></InputNumber>
+								<ValidationMessage For="(() => productos.ProductoMonto)"></ValidationMessage>
+							</div>
+
+							<div class="mb-3">
+								<label class="form-label"><strong>Cantidad (Stock)</strong></label>
+								<InputNumber class="form-control" @bind-Value="productos.ProductoCantidad"></InputNumber>
+								<ValidationMessage For="(() => productos.ProductoCantidad)"></ValidationMessage>
+							</div>
+						</div>
+
+						<div class="card-footer text-center">
+							<span class="btn-group" role="group">
+								<a type="button" class="btn btn-outline-danger" @onclick="() => MostrarModal = true"><span class="bi bi-trash"></span> Eliminar</a>
+								<button type="submit" class="btn btn-outline-success bi bi-floppy"> Guardar</button>
+								<a href="/Productos/Index" class="btn btn-outline-secondary bi bi-box-arrow-left"> Volver</a>
+							</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-md-5 d-flex justify-content-center align-items-start mt-3 mt-md-0">
+					<div class="card shadow-sm p-4 text-center" style="height: 100%; min-height: 400px; width: 100%;">
+						<p class="text-muted mb-2">Imagen del Producto</p>
+						@if (productos.ProductoImagen != null)
+						{
+							<img src="data:image/png;base64,@Convert.ToBase64String(productos.ProductoImagen)" class="img-fluid mb-3" style="max-height: 250px; object-fit: contain; width: 100%;" />
+						}
+						else
+						{
+							<i class="bi bi-image fs-1 text-muted d-block mx-auto mb-3" style="font-size: 100px !important;"></i>
+						}
+						<p class="text-muted">Subir o cambiar Imagen</p>
+						<InputFile OnChange="SubirImagen" accept=".jpg,.jpeg,.png,.gif" />
+						<ValidationMessage For="(() => productos.ProductoImagen)"></ValidationMessage>
+					</div>
+				</div>
+			</div>
+		</div>
+	</EditForm>
+}
+
+@if (MostrarModal)
+{
+	<div class="modal fade show d-block" tabindex="-1" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content shadow">
+
+				<div class="modal-header bg-danger text-white">
+					<h5 class="modal-title w-100 text-center">Eliminar Producto</h5>
+					<button type="button" class="btn-close" @onclick="CerrarModal" aria-label="Cerrar"></button>
+				</div>
+
+				<div class="modal-body text-danger">
+					<p><strong>¿Está seguro de eliminar este Producto?</strong></p>
+
+					<h5 class="text-center text-dark"><strong>Datos del Producto</strong></h5>
+				</div>
+
+				<div class="mb-3 ms-3">
+					<p><strong>Id: </strong>@productos.ProductoId</p>
+					<p><strong>Nombre: </strong>@productos.ProductoNombre</p>
+					<p><strong>Descripción: </strong>@productos.ProductoDescripcion</p>
+					<p><strong>Monto: </strong>@productos.ProductoMonto.ToString("N2")</p>
+					<p><strong>Categoria: </strong>@productos.Categoria</p>
+				</div>
+
+				<div class="modal-footer justify-content-center">
+					<span class="btn-group" role="group">
+						<button class="btn btn-outline-danger bi bi-trash" @onclick="Eliminar"> Eliminar</button>
+						<button class="btn btn-outline-secondary bi bi-box-arrow-left" @onclick="CerrarModal"> Volver</button>
+					</span>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+<NavInferior></NavInferior>
+@code {
+	[Parameter]
+	public int ProductoId { get; set; }
+
+	public Productos? productos { get; set; } = new Productos();
+	private bool MostrarModal = false;
+	private bool isLoading = true;
+
+	private IBrowserFile? selectedImageFile;
+
+	protected override async Task OnInitializedAsync()
+	{
+		isLoading = true;
+
+		if (ProductoId > 0)
+		{
+			productos = await ProductosService.Buscar(ProductoId);
+			if (productos == null)
+			{
+				itoastservice.ShowError("Producto no encontrado.");
+				navigationmanager.NavigateTo("/Productos/Index");
+				return;
+			}
+		}
+		else
+		{
+			itoastservice.ShowError("ID de producto inválido.");
+			navigationmanager.NavigateTo("/Productos/Index");
+			return;
+		}
+
+		isLoading = false;
+	}
+
+	private void CerrarModal()
+	{
+		MostrarModal = false;
+	}
+
+	private async Task SubirImagen(InputFileChangeEventArgs e)
+	{
+		selectedImageFile = e.File;
+
+		if (selectedImageFile != null)
+		{
+			if (selectedImageFile.Size > 5 * 1024 * 1024)
+			{
+				itoastservice.ShowError("La imagen no debe exceder los 5MB.");
+				selectedImageFile = null;
+				return;
+			}
+
+			try
+			{
+				var buffer = new byte[selectedImageFile.Size];
+				await selectedImageFile.OpenReadStream().ReadAsync(buffer);
+				productos.ProductoImagen = buffer;
+			}
+			catch (Exception ex)
+			{
+				itoastservice.ShowError($"Error al previsualizar la imagen: {ex.Message}");
+				selectedImageFile = null;
+			}
+		}
+	}
+
+
+	private async Task Guardar()
+	{
+		if (selectedImageFile != null)
+		{
+			try
+			{
+				using var memoryStream = new MemoryStream();
+				await selectedImageFile.OpenReadStream().CopyToAsync(memoryStream);
+				productos.ProductoImagen = memoryStream.ToArray();
+				itoastservice.ShowSuccess("Imagen cargada correctamente.");
+			}
+			catch (Exception ex)
+			{
+				itoastservice.ShowError($"Error al cargar la imagen: {ex.Message}");
+				return;
+			}
+		}
+
+		var guardo = await ProductosService.Guardar(this.productos);
+
+		if (guardo != null)
+		{
+			itoastservice.ShowSuccess("Producto guardado correctamente.");
+			navigationmanager.NavigateTo("/Productos/Index");
+		}
+		else
+		{
+			itoastservice.ShowError("Error al guardar el Producto.");
+		}
+	}
+
+	private async Task Eliminar()
+	{
+		if (productos != null)
+		{
+			var Eliminado = await ProductosService.Eliminar(productos.ProductoId);
+			if (Eliminado)
+			{
+				itoastservice.ShowSuccess("Producto eliminado correctamente.");
+				navigationmanager.NavigateTo("/Productos/Index");
+			}
+			else
+			{
+				itoastservice.ShowError("Error al eliminar el Producto.");
+			}
+			MostrarModal = false;
+		}
+	}
+}

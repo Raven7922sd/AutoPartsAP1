@@ -1,0 +1,109 @@
+﻿@page "/Account/Manage/Compras"
+@inject UserManager<ApplicationUser> userManager
+@inject NavigationManager navigationManager
+@inject VentasService ventasService
+@inject ComprasService comprasService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Historial de Compras</PageTitle>
+<NavCentral></NavCentral>
+
+<div class="row">
+    <div class="col-lg-3 mb-4">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body px-3 py-4">
+                <AutoPartsAP1.Components.Account.Shared.ManageNavMenu />
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-9">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body p-4">
+                <div class="max-w-5xl mx-auto p-6">
+                    <h2 class="text-center font-semibold text-gray-800 mb-6 border-b pb-2">Mis Compras</h2>
+
+                    @if (ventas == null)
+                    {
+                        <div class="text-gray-500">Cargando tus compras...</div>
+                    }
+                    else if (!ventas.Any())
+                    {
+                        <div class="text-gray-500">No has realizado ninguna compra.</div>
+                    }
+                    else
+                    {
+                        <div class="space-y-8">
+                            @foreach (var venta in ventas)
+                            {
+                                <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div>
+                                            <h3 class="text-lg font-bold text-indigo-600">Factura #@venta.VentaId</h3>
+                                            <p class="text-sm text-gray-500">Fecha: @venta.Fecha.ToShortDateString()</p>
+                                        </div>
+
+                                    </div>
+
+                                    <table class="w-full text-sm text-gray-700 border-collapse">
+                                        <thead class="bg-indigo-50">
+                                            <tr>
+                                                <th class="text-left py-2 px-3">Producto</th>
+                                                <th class="text-left py-2 px-3">Cantidad</th>
+                                                <th class="text-left py-2 px-3">Precio</th>
+                                                <th class="text-left py-2 px-3">Subtotal</th>
+                                                <th class="text-left py-2 px-3">Direcci&oacute;n</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var detalle in venta.VentasDetalles)
+                                            {
+                                                <tr class="border-t border-gray-200">
+                                                    <td class="py-2 px-3">@detalle.Producto?.ProductoNombre</td>
+                                                    <td class="py-2 px-3">@detalle.Cantidad</td>
+                                                    <td class="py-2 px-3">@detalle.Producto?.ProductoMonto.ToString("C")</td>
+                                                    <td class="py-2 px-3">@((detalle.Cantidad * (detalle.Producto?.ProductoMonto ?? 0)).ToString("C"))</td>
+                                                    <td class="py-2 px-3">@detalle.Pago?.Direccion</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+
+                                    <div class="text-right mt-4">
+                                        <span class="text-lg font-semibold text-green-600"><strong>Total:</strong> @venta.Total.ToString("C")</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<NavInferior></NavInferior>
+
+@code {
+    private List<Ventas> ventas = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = await userManager.GetUserAsync(context.User);
+
+        if (user != null)
+        {
+            ventas = await comprasService.ObtenerVentasPorUsuario(user.Id);
+        }
+        else
+        {
+            navigationManager.NavigateTo("/Identity/Account/Login", true);
+        }
+    }
+
+    private async Task MostrarFactura(int ventaId)
+    {
+        var factura = await comprasService.ObtenerFacturaPorIdAsync(ventaId);
+    }
+}

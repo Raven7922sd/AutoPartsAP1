@@ -1,0 +1,149 @@
+﻿@page "/Servicio/Create"
+@using Blazored.Toast.Services
+@using AutoPartsAP1.Components.Models;
+@using Microsoft.AspNetCore.Components.Forms
+@inject ServiciosService servicioService
+@inject NavigationManager navigationmanager
+@inject IToastService itoastservice
+@rendermode InteractiveServer
+@attribute [Authorize]
+@attribute [Authorize(Roles="Admin")]
+
+
+<PageTitle>Crear Producto</PageTitle>
+<NavCentral></NavCentral>
+<EditForm Model="servicio" OnValidSubmit="Guardar" FormName="ServicioCreate">
+    <DataAnnotationsValidator />
+
+    <div class="container mt-4">
+        <h3 class="fw-semibold text-center">Crear Nuevo Producto</h3>
+
+        <div class="row mt-4">
+            <div class="col-md-7">
+                <div class="card shadow-lg">
+                    <div class="card-header text-center">
+                        <h5 class="card-title">Detalles del Servicio</h5>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Servicio Id</strong></label>
+                            <InputNumber class="form-control" @bind-Value="servicio.ServicioId" readonly />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Nombre del Servicio</strong></label>
+                            <InputText class="form-control" @bind-Value="servicio.Nombre" placeholder="Ingrese el nombre" />
+                            <ValidationMessage For="(() => servicio.Nombre)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Descripción del Servicio</strong></label>
+                            <InputTextArea class="form-control" @bind-Value="servicio.Descripcion" placeholder="Ingrese la descripción" />
+                            <ValidationMessage For="(() => servicio.Descripcion)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Monto (Precio)</strong></label>
+                            <InputNumber class="form-control" step="0.01" @bind-Value="servicio.Precio" />
+                            <ValidationMessage For="(() => servicio.Precio)" />
+                        </div>
+                    </div>
+
+                    <div class="card-footer text-center">
+                        <span class="btn-group" role="group">
+                            <button type="reset" class="btn btn-outline-primary bi bi-arrow-clockwise" @onclick="Nuevo"> Limpiar</button>
+                            <button type="submit" class="btn btn-outline-success bi bi-floppy"> Guardar</button>
+                            <a href="/Servicios/Index" class="btn btn-outline-secondary bi bi-box-arrow-left"> Volver</a>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-5 d-flex justify-content-center align-items-start mt-3 mt-md-0">
+                <div class="card shadow-sm p-4 text-center" style="height: 100%; min-height: 400px; width: 100%;">
+                    <p class="text-muted mb-2">Imagen del Producto</p>
+
+                    @if (servicio.ServicioImagen != null)
+                    {
+                        <img src="data:image/png;base64,@Convert.ToBase64String(servicio.ServicioImagen)"
+                        class="img-fluid mb-3" alt="Imagen del producto"
+                        style="max-height: 250px; object-fit: contain; width: 100%;" />
+                    }
+                    else
+                    {
+                        <i class="bi bi-image fs-1 text-muted d-block mx-auto mb-3" style="font-size: 100px !important;"></i>
+                    }
+
+                    <p class="text-muted">Subir Imagen</p>
+                    <InputFile OnChange="SubirImagen" accept=".jpg,.jpeg,.png,.gif" />
+                </div>
+            </div>
+        </div>
+    </div>
+</EditForm>
+<NavInferior></NavInferior>
+@code {
+    private Servicios servicio { get; set; } = new Servicios();
+    private IBrowserFile? selectedImageFile;
+
+    public void Nuevo()
+    {
+        servicio = new Servicios();
+        selectedImageFile = null;
+    }
+
+    private async Task SubirImagen(InputFileChangeEventArgs e)
+    {
+        selectedImageFile = e.File;
+
+        if (selectedImageFile != null)
+        {
+            if (selectedImageFile.Size > 5 * 1024 * 1024)
+            {
+                itoastservice.ShowError("La imagen no debe exceder los 5MB.");
+                selectedImageFile = null;
+                servicio.ServicioImagen= null;
+                return;
+            }
+
+            try
+            {
+                using var stream = new MemoryStream();
+                await selectedImageFile.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024).CopyToAsync(stream);
+                servicio.ServicioImagen = stream.ToArray();
+            }
+            catch (Exception ex)
+            {
+                itoastservice.ShowError($"Error al cargar la imagen: {ex.Message}");
+                selectedImageFile = null;
+                servicio.ServicioImagen= null;
+            }
+        }
+        else
+        {
+            servicio.ServicioImagen= null;
+        }
+    }
+
+    public async Task Guardar()
+    {
+        if (servicio == null)
+        {
+            itoastservice.ShowError("Error interno: El servicio es nulo.");
+            return;
+        }
+        var guardo = await servicioService.GuardarServicio(servicio);
+
+        if (guardo)
+        {
+            itoastservice.ShowSuccess("Servicio guardado correctamente");
+            navigationmanager.NavigateTo("/Servicios/Index");
+            Nuevo();
+        }
+        else
+        {
+            itoastservice.ShowError("Error al registrar el servicio");
+        }
+    }
+}

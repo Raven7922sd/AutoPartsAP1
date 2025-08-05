@@ -1,0 +1,268 @@
+﻿@page "/Carrito"
+@inject CarritoService carritoservice
+@inject NavigationManager navigationManager
+@inject Blazored.Toast.Services.IToastService toastService
+@inject VentasService ventasService
+@using System.Globalization
+@using AutoPartsAP1.Components.Models;
+@using Microsoft.AspNetCore.Components.Authorization
+@rendermode InteractiveServer
+@inject AuthenticationStateProvider authStateProvider
+
+<PageTitle>Tu Carrito</PageTitle>
+
+<NavCentral></NavCentral>
+
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Carrito de Compras</h2>
+
+    @if (!carritoservice.GetCartItems().Any())
+    {
+        <div class="alert alert-secondary text-center py-4 shadow-sm" role="alert">
+            <i class="bi bi-cart-x-fill display-4 text-muted mb-3 d-block"></i>
+            <p class="lead fw-bold mb-3">Tu carrito está vacío.</p>
+            <p class="text-muted mb-4"><strong>No has añadido ningún producto todavía :'(</strong></p>
+            <a href="/" class="btn btn-dark btn-lg mt-3">Ir a la tienda</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col"></th>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Precio Unitario</th>
+                        <th scope="col">Cantidad</th>
+                        <th scope="col">Subtotal</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in carritoservice.GetCartItems())
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.Producto.ProductoImagenUrl))
+                                {
+                                    <img src="@item.Producto.ProductoImagenUrl" alt="@item.Producto.ProductoNombre" style="width: 70px; height: 70px; object-fit: cover; border-radius: 5px;" />
+                                }
+                                else
+                                {
+                                    <img src="https://placehold.co/70x70/dee2e6/6c757d?text=No+Img" alt="No Image" style="width: 70px; height: 70px; object-fit: cover; border-radius: 5px;" />
+                                }
+                            </td>
+                            <td>@item.Producto.ProductoNombre</td>
+                            <td>RD$@item.Producto.ProductoMonto.ToString("N2", CultureInfo.GetCultureInfo("es-DO"))</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary" @onclick="async () => await UpdateQuantity(item.Producto.ProductoId, item.Cantidad - 1)">-</button>
+                                    <input type="number" class="form-control text-center mx-2" style="width: 70px;"
+                                           value="@item.Cantidad"
+                                           @onchange="async e => await OnCantidadChanged(item.Producto.ProductoId, e.Value?.ToString())" />
+                                    <button class="btn btn-sm btn-outline-secondary" @onclick="async () => await UpdateQuantity(item.Producto.ProductoId, item.Cantidad + 1)">+</button>
+                                </div>
+                            </td>
+                            <td>RD$@item.Subtotal.ToString("N2", CultureInfo.GetCultureInfo("es-DO"))</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveItem(item.Producto.ProductoId)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" class="text-end fw-bold">Total:</td>
+                        <td class="fw-bold">RD$@carritoservice.GetTotalPrice().ToString("N2", CultureInfo.GetCultureInfo("es-DO"))</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+            <button class="btn btn-danger" @onclick="ClearCart">Vaciar Carrito</button>
+            <button class="btn btn-success" @onclick="ValidarYMostrarFormulario">Proceder al Pago</button>
+        </div>
+    }
+</div>
+
+@if (mostrandoFormularioPago)
+{
+    <div class="card mt-4 shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title text-center">Datos de Pago</h4>
+
+            <EditForm Model="@datosPago">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label class="form-label">Nombre del Titular</label>
+                    <InputText class="form-control" placeholder="Propietario de la tarjeta" @bind-Value="datosPago.NombreTitular" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Número de Tarjeta</label>
+                    <InputText class="form-control" placeholder="12 dígitos en adelante" @bind-Value="datosPago.NumeroTarjeta" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Fecha de Expiración</label>
+                    <InputText class="form-control" placeholder="MM/AA" @bind-Value="datosPago.FechaExpiracion" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">CVV</label>
+                    <InputText class="form-control" placeholder="C&oacute;digo trasero de la tarjeta" @bind-Value="datosPago.CVV" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Direcci&oacute;n</label>
+                    <InputText class="form-control" placeholder="Direcci&oacute;n del env&iacute;o" @bind-Value="datosPago.Direccion" />
+                </div>
+
+                <button class="btn btn-success" @onclick="ConfirmarPago">Confirmar Compra</button>
+            </EditForm>
+        </div>
+    </div>
+}
+<NavInferior></NavInferior>
+@code {
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
+
+    private bool usuarioAutenticado = false;
+    private bool mostrandoFormularioPago = false;
+    private PagoModel datosPago = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        carritoservice.OnCartChanged += StateHasChanged;
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        usuarioAutenticado = user.Identity?.IsAuthenticated ?? false;
+    }
+
+    public void Dispose()
+    {
+        carritoservice.OnCartChanged -= StateHasChanged;
+    }
+
+    private async Task UpdateQuantity(int productoId, int newQuantity)
+    {
+        var exito = await carritoservice.UpdateQuantityConValidacionAsync(productoId, newQuantity);
+        if (exito)
+        {
+            toastService.ShowInfo("Cantidad actualizada.");
+        }
+        else
+        {
+            toastService.ShowError("No hay suficiente stock disponible para esta cantidad.");
+        }
+    }
+
+    private async Task OnCantidadChanged(int productoId, string? value)
+    {
+        if (int.TryParse(value, out var newQuantity))
+        {
+            await UpdateQuantity(productoId, newQuantity);
+        }
+    }
+
+    private void RemoveItem(int productoId)
+    {
+        carritoservice.RemoveItem(productoId);
+        toastService.ShowWarning("Producto eliminado del carrito.");
+    }
+
+    private void ClearCart()
+    {
+        carritoservice.ClearCart();
+        toastService.ShowWarning("El carrito ha sido vaciado.");
+    }
+
+    private async Task ValidarYMostrarFormulario()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated ?? false)
+        {
+            mostrandoFormularioPago = true;
+        }
+        else
+        {
+            toastService.ShowWarning("Debes iniciar sesión para continuar con el pago.");
+            navigationManager.NavigateTo("/Account/Login");
+        }
+    }
+
+    private async Task ConfirmarPago()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (!user.Identity?.IsAuthenticated ?? true)
+        {
+            toastService.ShowWarning("Debes iniciar sesión para proceder al pago.");
+            navigationManager.NavigateTo("/Account/Login");
+            return;
+        }
+
+        var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            toastService.ShowError("No se pudo identificar al usuario.");
+            return;
+        }
+
+        var nuevoPago = new PagoModel
+            {
+                NombreTitular = datosPago.NombreTitular,
+                NumeroTarjeta = datosPago.NumeroTarjeta,
+                FechaExpiracion = datosPago.FechaExpiracion,
+                CVV = datosPago.CVV,
+                Direccion = datosPago.Direccion,
+            };
+
+        var pagoGuardado = await ventasService.GuardarPago(nuevoPago);
+
+        if (pagoGuardado is null || pagoGuardado.PagoId <= 0)
+        {
+            toastService.ShowError("No se pudo procesar el pago.");
+            return;
+        }
+
+        var venta = new Ventas
+            {
+                ApplicationUserId = userId,
+                Fecha = DateTime.Now,
+                Total = carritoservice.GetTotalPrice(),
+                VentasDetalles = carritoservice.GetCartItems().Select(item => new VentasDetalles
+                {
+                    ProductoId = item.Producto.ProductoId,
+                    Cantidad = item.Cantidad,
+                    PrecioUnitario = item.Producto.ProductoMonto,
+                    PagoId = pagoGuardado.PagoId
+                }).ToList()
+            };
+
+        var exito = await ventasService.Guardar(venta);
+
+        if (exito)
+        {
+            toastService.ShowSuccess("¡Compra realizada con éxito!");
+            carritoservice.ClearCart();
+            navigationManager.NavigateTo($"/Factura/{venta.VentaId}");
+        }
+        else
+        {
+            toastService.ShowError("Ocurrió un error al procesar la compra.");
+        }
+    }
+}

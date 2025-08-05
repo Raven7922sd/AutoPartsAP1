@@ -1,0 +1,149 @@
+﻿@page "/Servicios/Index"
+@inject ServiciosService serviciosService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+@attribute [Authorize]
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Servicios Admin</PageTitle>
+<NavCentral></NavCentral>
+<div class="container">
+	<div class="card shadow-lg">
+		<div class="card-header position-relative text-center">
+			<h4 class="card-title">Registro de Servicios</h4>
+		</div>
+
+		<div class="card-body">
+			<div class="d-flex justify-content-between align-items-center mb-4">
+				<h5 class="card-title mb-0"><strong>Filtros de B&uacute;squeda</strong></h5>
+				<a href="/Servicio/Create" class="btn btn-success">
+					<span class="bi bi-plus-square"></span> Crear
+				</a>
+			</div>
+
+			<div class="row g-3 align-items-end mb-3">
+
+				<div class="col-md-3">
+					<label class="form-label"><strong>Filtrar por</strong></label>
+					<InputSelect class="form-select" @bind-Value="Filtro">
+						<option value="" disabled selected>Seleccione una opci&oacute;n</option>
+						<option value="ServicioId">Id</option>
+						<option value="Nombre">Nombre</option>
+						<option value="Monto">Monto</option>
+					</InputSelect>
+				</div>
+
+				<div class="col-md-3">
+					<label class="form-label"><strong>Buscador</strong></label>
+					<div class="input-group">
+						<input class="form-control" @bind="ValorFiltro" @oninput="FiltroCambiado" placeholder=" Buscar" />
+						<button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
+
+					</div>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-md-3">
+					<label class="form-label"><strong>Desde</strong></label>
+					<div class="input-group">
+						<span class="input-group-text bi bi-calendar-date"></span>
+						<input type="date" @bind="FechaDesde" class="form-control" />
+					</div>
+				</div>
+
+				<div class="col-md-3">
+					<label class="form-label"><strong>Hasta</strong></label>
+					<div class="input-group">
+						<span class="input-group-text bi bi-calendar-date-fill"></span>
+						<input type="date" @bind="FechaHasta" class="form-control" />
+					</div>
+				</div>
+			</div>
+
+			<div class="table-responsive mt-2">
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th>Servicio Id</th>
+							<th>Nombre</th>
+							<th>Descripci&oacute;n</th>
+							<th class="ps-3">Monto</th>
+							<th>Veces Solicitados</th>
+							<th>Fecha</th>
+							<th>Editar</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var servicios in ListaServicios)
+						{
+							<tr>
+								<td>@servicios.ServicioId</td>
+								<td>@servicios.Nombre</td>
+								<td>@servicios.Descripcion</td>
+								<td>@servicios.Precio.ToString("N2")</td>
+								<td class="text-start ps-4">@servicios.Solicitados</td>
+								<td>@servicios.FechaServicio.ToString("dd/MM/yyyy")</td>
+								<td><a href="/Servicios/Edit/@servicios.ServicioId" class="btn btn-outline-primary bi bi-pencil-square"></a></td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+			<div class="text-end">
+			</div>
+			<div class="container mt-4 d-flex justify-content-between align-items-end">
+				<label class="form-label col-md-1">
+					<strong>Conteo:</strong>
+					<input type="text" class="form-control" value="@ListaServicios.Count" readonly />
+				</label>
+
+				<label class="form-label col-md-2">
+					<strong>Total:</strong>
+					<input type="text" class="form-control" value="@ListaServicios.Sum(m => m.Precio).ToString("N2")" readonly />
+				</label>
+			</div>
+		</div>
+	</div>
+</div>
+<NavInferior></NavInferior>
+@code {
+	public List<Servicios> ListaServicios { get; set; } = new List<Servicios>();
+	public string Filtro { get; set; } = string.Empty;
+	public string ValorFiltro { get; set; } = string.Empty;
+	public DateTime? FechaDesde { get; set; }
+	public DateTime? FechaHasta { get; set; }
+	private CancellationTokenSource? _cts;
+
+	protected override async Task OnInitializedAsync()
+	{
+		ListaServicios = await serviciosService.Listar(a => a.ServicioId > 0);
+		FechaDesde = null;
+		FechaHasta = null;
+	}
+
+	public async Task Buscar()
+	{
+		DateTime? fechaHastaAjustada = FechaHasta?.Date.AddDays(1).AddTicks(-1);
+		ListaServicios = await serviciosService.BuscarFiltradosAsync(Filtro, ValorFiltro, FechaDesde, fechaHastaAjustada);
+	}
+
+	private async Task FiltroCambiado(ChangeEventArgs e)
+	{
+		ValorFiltro = e.Value?.ToString() ?? string.Empty;
+
+		_cts?.Cancel();
+		_cts = new CancellationTokenSource();
+
+		try
+		{
+			await Task.Delay(400, _cts.Token);
+
+			await Buscar();
+			StateHasChanged();
+		}
+		catch (TaskCanceledException)
+		{
+		}
+	}
+}

@@ -1,0 +1,154 @@
+﻿@page "/Productos/Index"
+@inject ProductoService ProductosService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+@attribute [Authorize]
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Registro</PageTitle>
+<NavCentral></NavCentral>
+<div class="container">
+	<div class="card shadow-lg">
+		<div class="card-header position-relative text-center">
+			<h4 class="card-title">Registro de Productos</h4>
+		</div>
+
+		<div class="card-body">
+			<div class="d-flex justify-content-between align-items-center mb-4">
+				<h5 class="card-title mb-0"><strong>Filtros de B&uacute;squeda</strong></h5>
+				<a href="/Productos/Create" class="btn btn-success">
+					<span class="bi bi-plus-square"></span> Crear
+				</a>
+			</div>
+
+			<div class="row g-3 align-items-end mb-3">
+
+				<div class="col-md-3">
+					<label class="form-label"><strong>Filtrar por</strong></label>
+					<InputSelect class="form-select" @bind-Value="Filtro">
+						<option value="" disabled selected>Seleccione una opci&oacute;n</option>
+						<option value="ProductoId">Id</option>
+						<option value="Nombre">Nombre</option>
+						<option value="Monto">Monto</option>
+					</InputSelect>
+				</div>
+
+				<div class="col-md-3">
+					<label class="form-label"><strong>Buscador</strong></label>
+					<div class="input-group">
+						<input class="form-control" @bind="ValorFiltro" @oninput="FiltroCambiado" placeholder=" Buscar" />
+						<button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
+
+					</div>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-md-3">
+					<label class="form-label"><strong>Desde</strong></label>
+					<div class="input-group">
+						<span class="input-group-text bi bi-calendar-date"></span>
+						<input type="date" @bind="FechaDesde" class="form-control" />
+					</div>
+				</div>
+
+				<div class="col-md-3">
+					<label class="form-label"><strong>Hasta</strong></label>
+					<div class="input-group">
+						<span class="input-group-text bi bi-calendar-date-fill"></span>
+						<input type="date" @bind="FechaHasta" class="form-control" />
+					</div>
+				</div>
+			</div>
+
+			<div class="table-responsive mt-2">
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th>Producto Id</th>
+							<th>Nombre</th>
+							<th>Descripci&oacute;n</th>
+							<th class="ps-3">Monto</th>
+							<th>Cantidad</th>
+							<th>Cantegor&iacute;a</th>
+							<th>Fecha</th>
+							<th>Editar</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var productos in ListaProductos)
+						{
+							<tr>
+								<td>@productos.ProductoId</td>
+								<td>@productos.ProductoNombre</td>
+								<td>@productos.ProductoDescripcion</td>
+								<td>@productos.ProductoMonto.ToString("N2")</td>
+								<td class="text-start ps-4">@productos.ProductoCantidad</td>
+								<td>@productos.Categoria</td>
+								<td>@productos.Fecha.ToString("dd/MM/yyyy")</td>
+								<td><a href="/Productos/Edit/@productos.ProductoId" class="btn btn-outline-primary bi bi-pencil-square"></a></td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+			<div class="text-end">
+				<a href="" class="">
+					<span class=" btn btn-primary bi bi-cash-coin"> Facturar</span>
+				</a>
+			</div>
+			<div class="container mt-4 d-flex justify-content-between align-items-end">
+				<label class="form-label col-md-1">
+					<strong>Conteo:</strong>
+					<input type="text" class="form-control" value="@ListaProductos.Count" readonly />
+				</label>
+
+				<label class="form-label col-md-2">
+					<strong>Total:</strong>
+					<input type="text" class="form-control" value="@ListaProductos.Sum(m => m.ProductoMonto).ToString("N2")" readonly />
+				</label>
+			</div>
+		</div>
+	</div>
+</div>
+<NavInferior></NavInferior>
+@code {
+	public List<Productos> ListaProductos { get; set; } = new List<Productos>();
+	public string Filtro { get; set; } = string.Empty;
+	public string ValorFiltro { get; set; } = string.Empty;
+	public DateTime? FechaDesde { get; set; }
+	public DateTime? FechaHasta { get; set; }
+	private CancellationTokenSource? _cts;
+
+	protected override async Task OnInitializedAsync()
+	{
+		ListaProductos = await ProductosService.Listar(a => a.ProductoId > 0);
+		FechaDesde = null;
+		FechaHasta = null;
+	}
+
+	public async Task Buscar()
+	{
+		DateTime? fechaHastaAjustada = FechaHasta?.Date.AddDays(1).AddTicks(-1);
+		ListaProductos = await ProductosService.BuscarFiltradosAsync(Filtro, ValorFiltro, FechaDesde, fechaHastaAjustada);
+	}
+
+	private async Task FiltroCambiado(ChangeEventArgs e)
+	{
+		ValorFiltro = e.Value?.ToString() ?? string.Empty;
+
+		_cts?.Cancel();
+		_cts = new CancellationTokenSource();
+
+		try
+		{
+			await Task.Delay(400, _cts.Token);
+
+			await Buscar();
+			StateHasChanged();
+		}
+		catch (TaskCanceledException)
+		{
+		}
+	}
+}

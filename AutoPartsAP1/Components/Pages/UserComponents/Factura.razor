@@ -1,0 +1,82 @@
+﻿@page "/Factura/{ventaId:int}"
+@inject VentasService ventasService
+@inject NavigationManager navigationManager
+
+
+<PageTitle>Factura</PageTitle>
+<NavCentral></NavCentral>
+@if (venta == null)
+{
+    <div class="text-center mt-5">
+        <h4>Cargando factura...</h4>
+    </div>
+}
+else
+{
+    <div class="container my-5">
+        <div class="card shadow p-4 rounded-4">
+            <h2 class="text-center mb-4">Factura</h2>
+
+            <div class="mb-4">
+                <p><strong>Número de factura:</strong> @venta.VentaId</p>
+                <p><strong>Fecha:</strong> @venta.Fecha.ToString("dd/MM/yyyy hh:mm tt", new CultureInfo("es-DO"))</p>
+                <p><strong>Total:</strong> RD$ @venta.Total.ToString("N2")</p>
+            </div>
+
+            <hr />
+
+            <h5 class="mb-3 text-center">Detalles de la compra</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped rounded-3 overflow-hidden">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unitario</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var detalle in venta.VentasDetalles)
+                        {
+                            <tr>
+                                <td>@detalle.Producto?.ProductoNombre</td>
+                                <td>@detalle.Cantidad</td>
+                                <td>RD$ @detalle.PrecioUnitario.ToString("N2")</td>
+                                <td>RD$ @((detalle.Cantidad * detalle.PrecioUnitario).ToString("N2"))</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                            <td><strong>RD$ @venta.Total.ToString("N2")</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="/" class="btn btn-primary">Volver al inicio</a>
+            </div>
+        </div>
+    </div>
+}
+<NavInferior></NavInferior>
+
+@code {
+    [Parameter]
+    public int ventaId { get; set; }
+
+    private Ventas? venta;
+
+    protected override async Task OnInitializedAsync()
+    {
+        venta = await ventasService.BuscarVentas(ventaId);
+
+        if (venta == null)
+        {
+            navigationManager.NavigateTo("/Error");
+        }
+    }
+}

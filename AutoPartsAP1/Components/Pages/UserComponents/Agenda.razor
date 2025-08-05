@@ -1,0 +1,103 @@
+﻿@page "/agendar-servicio"
+@inject CitaService CitaService
+@inject NavigationManager NavigationManager
+@inject IToastService toastService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ServiciosService ServicioService
+@rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Agendar Servicio</PageTitle>
+<NavCentral></NavCentral>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg p-4">
+                <h2 class="card-title text-center fw-bold mb-4">Agendar Servicio</h2>
+                <EditForm Model="nuevaCita" OnValidSubmit="GuardarCita" FormName="Agendar">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <label for="clienteNombre" class="form-label">Nombre completo</label>
+                        <InputText id="clienteNombre" class="form-control" placeholder="Ingrese su nombre" @bind-Value="nuevaCita.ClienteNombre" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="servicio" class="form-label">Servicio a solicitar</label>
+                        <InputSelect id="servicio" class="form-select" @bind-Value="nuevaCita.ServicioSolicitado">
+                            <option value="">Seleccione un servicio</option>
+                            @if (listaServicios != null)
+                            {
+                                @foreach (var servicio in listaServicios)
+                                {
+                                    <option value="@servicio.Nombre">@servicio.Nombre</option>
+                                }
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="fechaCita" class="form-label">Fecha de la cita</label>
+                        <InputDate id="fechaCita" class="form-control" @bind-Value="nuevaCita.FechaCita" />
+                    </div>
+
+                    <button @onclick="GuardarCita" class="btn btn-primary w-100">Confirmar Cita</button>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+<NavInferior></NavInferior>
+
+@code {
+    private Cita nuevaCita = new Cita();
+    private List<Servicios> listaServicios;
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaServicios = await ServicioService.Listar(s => true);
+    }
+
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("window.scrollTo", 0, 0);
+        }
+    }
+
+    private async Task GuardarCita()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            var userId = user.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                toastService.ShowError("No se pudo obtener la información de su usuario. Por favor, vuelva a iniciar sesión.");
+                return;
+            }
+
+            nuevaCita.ApplicationUserId = userId;
+
+            var exito = await CitaService.GuardarCitaAsync(nuevaCita);
+            if (exito)
+            {
+                toastService.ShowSuccess($"Su cita ha sido agendada con éxito...");
+                NavigationManager.NavigateTo("/miscitas");
+            }
+            else
+            {
+                toastService.ShowError("Ocurrió un error al agendar su cita...");
+            }
+        }
+        else
+        {
+            toastService.ShowError("Debe iniciar sesión para agendar un servicio.");
+        }
+    }
+}
