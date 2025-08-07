@@ -9,13 +9,15 @@
             </div>
         </Authorized>
     </AuthorizeView>
-  
+
     <main>
+        <NavCentral></NavCentral>
 
             @Body
-
+        <NavInferior></NavInferior>
     </main>
 </div>
+
 <BlazoredToasts Position="ToastPosition.TopRight"
                 Timeout="2"
                 ShowProgressBar="true" @rendermode="RenderMode.InteractiveServer"></BlazoredToasts>
