@@ -9,117 +9,119 @@
 
 
 <PageTitle>Ventas Index</PageTitle>
-<NavCentral></NavCentral>
-<div class="container">
-	<div class="card shadow-lg">
-		<div class="card-header position-relative text-center">
-			<h4 class="card-title">Consulta de Ventas</h4>
-		</div>
+<div class="container py-4">
+    <div class="card shadow-sm rounded-4 border-0">
+        <div class="card-header bg-primary text-white text-center py-3 rounded-top-4">
+            <h4 class="mb-0"><i class="bi bi-cash-coin me-2"></i> Consulta de Ventas</h4>
+        </div>
 
-		<div class="card-body">
-			<div class="d-flex justify-content-between align-items-center mb-5">
-				<h5 class="card-title mb-0">Filtros de B&uacute;squeda</h5>
-			</div>
+        <div class="card-body p-4">
+            <h5 class="mb-3 text-primary"><i class="bi bi-funnel-fill me-2"></i> Filtros de Búsqueda</h5>
+            <div class="row g-3 mb-4">
 
-			<div class="row g-3 align-items-end mb-4">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Filtrar por</label>
+                    <InputSelect class="form-select" @bind-Value="Filtro">
+                        <option value="" selected disabled>Seleccione una opción</option>
+                        <option value="VentaId">Id</option>
+                        <option value="ClienteNombre">Cliente</option>
+                        <option value="Descripcion">Sistema</option>
+                        <option value="Monto">Monto</option>
+                    </InputSelect>
+                </div>
 
-				<div class="col-md-3">
-					<label class="form-label"><strong>Filtrar Por:</strong></label>
-					<InputSelect class="form-select" @bind-Value="Filtro">
-						<option value="" selected disabled>Seleccione una opci&oacute;n</option>
-						<option value="VentaId">Id</option>
-						<option value="ClienteNombre">Cliente</option>
-						<option value="Descripcion">Sistema</option>
-						<option value="Monto">Monto</option>
-					</InputSelect>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Buscador</label>
+                    <div class="input-group">
+                        <input class="form-control" @bind-value="ValorFiltro" @oninput="FiltroCambiado" placeholder="Buscar..." />
+                        <button type="button" class="btn btn-primary" @onclick="Buscar">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
 
-					<label class="form-label mt-4"><strong>Desde:</strong></label>
-					<div class="input-group">
-						<span class="input-group-text bi bi-calendar-date"></span>
-						<input type="date" @bind="FechaDesde" class="form-control" />
-					</div>
-				</div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Fecha Desde</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-calendar-date"></i></span>
+                        <input type="date" @bind="FechaDesde" class="form-control" />
+                    </div>
+                </div>
 
-				<div class="col-md-3">
-					<label class="form-label"><strong>Búsqueda</strong></label>
-					<div class="input-group">
-						<input class="form-control flex-grow-1" @bind-value="ValorFiltro" @oninput="FiltroCambiado" placeholder="Buscar" />
-						<button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
-					</div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Fecha Hasta</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-calendar-date-fill"></i></span>
+                        <input type="date" class="form-control" @bind-value="FechaHasta" />
+                    </div>
+                </div>
+            </div>
 
-					<div class="col-md-15">
-						<label class="form-label mt-4"><strong>Hasta:</strong></label>
-						<div class="input-group">
-							<span class="input-group-text bi bi-calendar-date-fill"></span>
-							<input type="date" class="form-control" @bind-value="FechaHasta" />
+            <hr class="mb-4">
 
-						</div>
-					</div>
-				</div>
-			</div>
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th scope="col">ID Venta</th>
+                            <th scope="col">Usuario</th>
+                            <th scope="col">Producto</th>
+                            <th scope="col">Categoría</th>
+                            <th scope="col" class="text-center">Cantidad</th>
+                            <th scope="col" class="text-end">Monto</th>
+                            <th scope="col">Fecha</th>
+                            <th scope="col" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ResultadoPaginado != null)
+                        {
+                            foreach (var ventas in ResultadoPaginado.Items)
+                            {
+                                <tr>
+                                    <td>@ventas.VentaId</td>
+                                    <td>@ventas.Usuario.Email</td>
+                                    <td>@ventas.VentasDetalles?.FirstOrDefault()?.Producto?.ProductoNombre</td>
+                                    <td>@ventas.VentasDetalles?.FirstOrDefault()?.Producto?.Categoria</td>
+                                    <td class="text-center">@ventas.VentasDetalles?.FirstOrDefault()?.Cantidad</td>
+                                    <td class="text-end">@(ventas.Total.ToString("C") ?? "0.00")</td>
+                                    <td>@ventas.Fecha.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-center">
+                                        <a href="Ventas/Edit/@ventas.VentaId" class="btn btn-outline-primary btn-sm" title="Editar">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
 
-			<div class="table-responsive">
-				<table class="table table-hover">
-					<thead>
-						<tr>
-							<th>Venta Id</th>
-							<th>Usuario</th>
-							<th>Producto</th>
-							<th>Categor&iacute;a</th>
-							<th class="text-start pe-5">Cantidad</th>
-							<th class="ps-3">Monto</th>
-							<th class="ps-4">Fecha de Creación</th>
-							<th>Editar</th>
-						</tr>
-					</thead>
-					<tbody>
-						@if (ResultadoPaginado != null)
-						{
-							foreach (var ventas in ResultadoPaginado.Items)
-							{
-								<tr>
-									<td>@ventas.VentaId</td>
-									<td class="pe-4">@ventas.Usuario.Email</td>
-									<td>@ventas.VentasDetalles?.FirstOrDefault()?.Producto?.ProductoNombre</td>
-									<td>@ventas.VentasDetalles?.FirstOrDefault()?.Producto?.Categoria</td>
-									<td class="text-center pe-5">@ventas.VentasDetalles?.FirstOrDefault()?.Cantidad</td>
-									<td class="pe-3">@(ventas.Total.ToString("N2") ?? "0.00")</td>
-									<td class="ps-4">@ventas.Fecha.ToString("dd/MM/yyyy")</td>
-									<td>
-										<a href="Ventas/Edit/@ventas.VentaId" class="btn btn-outline-primary bi bi-pencil-square"></a>
-									</td>
-								</tr>
-							}
-						}
-					</tbody>
-				</table>
-			</div>
+            @if (ResultadoPaginado != null && ResultadoPaginado.TotalPaginas > 1)
+            {
+                <nav aria-label="Paginación">
+                    <ul class="pagination justify-content-center mt-4">
+                        <li class="page-item @(ResultadoPaginado.TienePaginaAnterior ? "" : "disabled")">
+                            <button class="page-link" @onclick="() => CambiarPagina(PaginaActual - 1)" tabindex="-1" aria-disabled="@(ResultadoPaginado.TienePaginaAnterior ? "false" : "true")">Anterior</button>
+                        </li>
 
-			@if (ResultadoPaginado != null && ResultadoPaginado.TotalPaginas > 1)
-			{
-				<nav aria-label="Paginación">
-					<ul class="pagination justify-content-center mt-4">
-						<li class="page-item @(ResultadoPaginado.TienePaginaAnterior ? "" : "disabled")">
-							<button class="page-link" @onclick="() => CambiarPagina(PaginaActual - 1)">Anterior</button>
-						</li>
+                        @for (int i = 1; i <= ResultadoPaginado.TotalPaginas; i++)
+                        {
+                            <li class="page-item @(i == PaginaActual ? "active" : "")">
+                                <button class="page-link" @onclick="() => CambiarPagina(i)">@i</button>
+                            </li>
+                        }
 
-						@for (int i = 1; i <= ResultadoPaginado.TotalPaginas; i++)
-						{
-							<li class="page-item @(i == PaginaActual ? "active" : "")">
-								<button class="page-link" @onclick="() => CambiarPagina(i)">@i</button>
-							</li>
-						}
-
-						<li class="page-item @(ResultadoPaginado.TienePaginaSiguiente ? "" : "disabled")">
-							<button class="page-link" @onclick="() => CambiarPagina(PaginaActual + 1)">Siguiente</button>
-						</li>
-					</ul>
-				</nav>
-			}
-		</div>
-	</div>
+                        <li class="page-item @(ResultadoPaginado.TienePaginaSiguiente ? "" : "disabled")">
+                            <button class="page-link" @onclick="() => CambiarPagina(PaginaActual + 1)">Siguiente</button>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
 </div>
-<NavInferior></NavInferior>
 @code {
 	private PaginacionResultado<Ventas> ResultadoPaginado { get; set; }
 	private int PaginaActual { get; set; } = 1;
