@@ -10,11 +10,10 @@
 @attribute [Authorize(Roles = "Admin")]
 
 <PageTitle>Editar Producto</PageTitle>
-<NavCentral></NavCentral>
 @if (isLoading)
 {
-	<div class="text-center mt-5">
-		<div class="spinner-border text-primary" role="status">
+	<div class="d-flex justify-content-center align-items-center vh-100">
+		<div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
 			<span class="visually-hidden">Cargando...</span>
 		</div>
 	</div>
@@ -23,116 +22,146 @@ else
 {
 	<EditForm Model="productos" OnValidSubmit="Guardar" FormName="Cargar">
 		<DataAnnotationsValidator />
+		<div class="container py-4">
+			<div class="text-center mb-4">
+				<h2 class="fw-bold text-primary">
+					<i class="bi bi-pencil-square me-2"></i> Editar Producto
+				</h2>
+				<p class="text-muted">Actualiza los detalles del producto y su imagen.</p>
+			</div>
 
-		<div class="container mt-4">
-			<h3 class="fw-semibold text-center">Editar Producto</h3>
+			<div class="card shadow-sm rounded-4 border-0">
+				<div class="card-body p-4">
+					<div class="row g-4">
+						<div class="col-md-7">
+							<h5 class="mb-3 text-secondary">
+								<i class="bi bi-info-circle me-2"></i> Detalles del Producto
+							</h5>
+							<div class="row g-3">
+								<div class="col-12">
+									<label class="form-label fw-bold">ID del Producto</label>
+									<InputNumber class="form-control" @bind-Value="productos.ProductoId" readonly></InputNumber>
+								</div>
 
-			<div class="row mt-4">
-				<div class="col-md-7">
-					<div class="card shadow-lg">
-						<div class="card-header position-relative text-center">
-							<h5 class="card-title">Detalles del Producto</h5>
+								<div class="col-12">
+									<label class="form-label fw-bold">Nombre</label>
+									<InputText class="form-control" @bind-Value="productos.ProductoNombre" placeholder="Escribe el nombre del producto"></InputText>
+									<ValidationMessage For="(() => productos.ProductoNombre)"></ValidationMessage>
+								</div>
+
+								<div class="col-12">
+									<label class="form-label fw-bold">Descripción</label>
+									<InputTextArea class="form-control" @bind-Value="productos.ProductoDescripcion" placeholder="Añade una descripción detallada" rows="3"></InputTextArea>
+									<ValidationMessage For="(() => productos.ProductoDescripcion)"></ValidationMessage>
+								</div>
+
+								<div class="col-md-6">
+									<label class="form-label fw-bold">Monto (Precio)</label>
+									<InputNumber class="form-control" step="0.01" @bind-Value="productos.ProductoMonto" placeholder="0.00"></InputNumber>
+									<ValidationMessage For="(() => productos.ProductoMonto)"></ValidationMessage>
+								</div>
+
+								<div class="col-md-6">
+									<label class="form-label fw-bold">Cantidad (Stock)</label>
+									<InputNumber class="form-control" @bind-Value="productos.ProductoCantidad" placeholder="0"></InputNumber>
+									<ValidationMessage For="(() => productos.ProductoCantidad)"></ValidationMessage>
+								</div>
+
+								<div class="col-12">
+									<label class="form-label fw-bold">Categoría</label>
+									<InputSelect class="form-select" @bind-Value="productos.Categoria">
+										<option value="" disabled selected>Selecciona una categoría</option>
+										<option value="Uso General">Uso General</option>
+										<option value="Motocicletas">Motocicletas</option>
+										<option value="Autos o Vehículos Ligeros">Autos o Vehículos Ligeros</option>
+										<option value="Vehículos Pesados">Vehículos Pesados</option>
+									</InputSelect>
+									<ValidationMessage For="(()=>productos.Categoria)" />
+								</div>
+							</div>
 						</div>
 
-						<div class="card-body">
-
-							<div class="mb-3">
-								<label class="form-label"><strong>Producto Id</strong></label>
-								<InputNumber class="form-control" @bind-Value="productos.ProductoId" readonly></InputNumber>
+						<div class="col-md-5 d-flex flex-column align-items-center">
+							<h5 class="mb-3 text-secondary">
+								<i class="bi bi-image me-2"></i> Imagen del Producto
+							</h5>
+							<div class="card p-3 w-100 rounded-4" style="border: 2px dashed #e9ecef; height: 100%;">
+								<div class="d-flex flex-column justify-content-center align-items-center h-100">
+									@if (productos.ProductoImagen != null)
+									{
+										<img src="data:image/png;base64,@Convert.ToBase64String(productos.ProductoImagen)"
+											 class="img-fluid rounded-3 mb-3" alt="Imagen del producto"
+											 style="max-height: 250px; object-fit: contain; max-width: 100%;" />
+									}
+									else
+									{
+										<div class="text-center text-muted mb-3">
+											<i class="bi bi-image-fill" style="font-size: 5rem;"></i>
+											<p class="mt-2">No hay imagen seleccionada</p>
+										</div>
+									}
+									<InputFile OnChange="SubirImagen" accept=".jpg,.jpeg,.png,.gif" class="form-control mt-auto" />
+								</div>
 							</div>
-
-							<div class="mb-3">
-								<label class="form-label"><strong>Nombre del Producto</strong></label>
-								<InputText class="form-control" @bind-Value="productos.ProductoNombre" placeholder="Ingrese el nombre"></InputText>
-								<ValidationMessage For="(() => productos.ProductoNombre)"></ValidationMessage>
-							</div>
-
-							<div class="mb-3">
-								<label class="form-label"><strong>Descripción del Producto</strong></label>
-								<InputTextArea class="form-control" @bind-Value="productos.ProductoDescripcion" placeholder="Ingrese la descripción"></InputTextArea>
-								<ValidationMessage For="(() => productos.ProductoDescripcion)"></ValidationMessage>
-							</div>
-
-							<div class="mb-3">
-								<label class="form-label"><strong>Monto (Precio)</strong></label>
-								<InputNumber class="form-control" step="0.01" @bind-Value="productos.ProductoMonto"></InputNumber>
-								<ValidationMessage For="(() => productos.ProductoMonto)"></ValidationMessage>
-							</div>
-
-							<div class="mb-3">
-								<label class="form-label"><strong>Cantidad (Stock)</strong></label>
-								<InputNumber class="form-control" @bind-Value="productos.ProductoCantidad"></InputNumber>
-								<ValidationMessage For="(() => productos.ProductoCantidad)"></ValidationMessage>
-							</div>
-						</div>
-
-						<div class="card-footer text-center">
-							<span class="btn-group" role="group">
-								<a type="button" class="btn btn-outline-danger" @onclick="() => MostrarModal = true"><span class="bi bi-trash"></span> Eliminar</a>
-								<button type="submit" class="btn btn-outline-success bi bi-floppy"> Guardar</button>
-								<a href="/Productos/Index" class="btn btn-outline-secondary bi bi-box-arrow-left"> Volver</a>
-							</span>
 						</div>
 					</div>
 				</div>
 
-				<div class="col-md-5 d-flex justify-content-center align-items-start mt-3 mt-md-0">
-					<div class="card shadow-sm p-4 text-center" style="height: 100%; min-height: 400px; width: 100%;">
-						<p class="text-muted mb-2">Imagen del Producto</p>
-						@if (productos.ProductoImagen != null)
-						{
-							<img src="data:image/png;base64,@Convert.ToBase64String(productos.ProductoImagen)" class="img-fluid mb-3" style="max-height: 250px; object-fit: contain; width: 100%;" />
-						}
-						else
-						{
-							<i class="bi bi-image fs-1 text-muted d-block mx-auto mb-3" style="font-size: 100px !important;"></i>
-						}
-						<p class="text-muted">Subir o cambiar Imagen</p>
-						<InputFile OnChange="SubirImagen" accept=".jpg,.jpeg,.png,.gif" />
-						<ValidationMessage For="(() => productos.ProductoImagen)"></ValidationMessage>
+				<div class="card-footer bg-light text-center py-3 rounded-bottom-4">
+					<div class="btn-group" role="group">
+						<a type="button" class="btn btn-outline-danger d-flex align-items-center" @onclick="() => MostrarModal = true">
+							<i class="bi bi-trash me-2"></i> Eliminar
+						</a>
+						<button type="submit" class="btn btn-outline-success d-flex align-items-center">
+							<i class="bi bi-save me-2"></i> Guardar
+						</button>
+						<a href="/Productos/Index" class="btn btn-outline-secondary d-flex align-items-center">
+							<i class="bi bi-arrow-left me-2"></i> Volver 
+						</a>
 					</div>
 				</div>
 			</div>
 		</div>
 	</EditForm>
 }
-
 @if (MostrarModal)
 {
-	<div class="modal fade show d-block" tabindex="-1" role="dialog">
-		<div class="modal-dialog">
-			<div class="modal-content shadow">
-
-				<div class="modal-header bg-danger text-white">
-					<h5 class="modal-title w-100 text-center">Eliminar Producto</h5>
-					<button type="button" class="btn-close" @onclick="CerrarModal" aria-label="Cerrar"></button>
+	<div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content shadow-lg rounded-4">
+				<div class="modal-header bg-danger text-white py-3 rounded-top-4">
+					<h5 class="modal-title w-100 text-center fw-bold">
+						<i class="bi bi-exclamation-triangle-fill me-2"></i> Eliminar Producto
+					</h5>
+					<button type="button" class="btn-close btn-close-white" @onclick="CerrarModal" aria-label="Cerrar"></button>
 				</div>
-
-				<div class="modal-body text-danger">
-					<p><strong>¿Está seguro de eliminar este Producto?</strong></p>
-
-					<h5 class="text-center text-dark"><strong>Datos del Producto</strong></h5>
+				<div class="modal-body text-center p-4">
+					<p class="mb-4 fs-5 text-danger"><strong>¿Estás seguro de que deseas eliminar este producto?</strong></p>
+					<div class="alert alert-light text-start border rounded-3 p-3">
+						<h6 class="fw-bold mb-2 text-dark">Detalles del Producto:</h6>
+						<ul class="list-unstyled mb-0">
+							<li><strong>ID:</strong> @productos.ProductoId</li>
+							<li><strong>Nombre:</strong> @productos.ProductoNombre</li>
+							<li><strong>Descripción:</strong> @productos.ProductoDescripcion</li>
+							<li><strong>Monto:</strong> @productos.ProductoMonto.ToString("C")</li>
+							<li><strong>Categoría:</strong> @productos.Categoria</li>
+						</ul>
+					</div>
 				</div>
-
-				<div class="mb-3 ms-3">
-					<p><strong>Id: </strong>@productos.ProductoId</p>
-					<p><strong>Nombre: </strong>@productos.ProductoNombre</p>
-					<p><strong>Descripción: </strong>@productos.ProductoDescripcion</p>
-					<p><strong>Monto: </strong>@productos.ProductoMonto.ToString("N2")</p>
-					<p><strong>Categoria: </strong>@productos.Categoria</p>
-				</div>
-
-				<div class="modal-footer justify-content-center">
-					<span class="btn-group" role="group">
-						<button class="btn btn-outline-danger bi bi-trash" @onclick="Eliminar"> Eliminar</button>
-						<button class="btn btn-outline-secondary bi bi-box-arrow-left" @onclick="CerrarModal"> Volver</button>
-					</span>
+				<div class="modal-footer justify-content-center bg-light rounded-bottom-4">
+					<div class="btn-group" role="group">
+						<button class="btn btn-danger d-flex align-items-center" @onclick="Eliminar">
+							<i class="bi bi-trash-fill me-2"></i> Eliminar
+						</button>
+						<button class="btn btn-secondary d-flex align-items-center" @onclick="CerrarModal">
+							<i class="bi bi-x-circle me-2"></i> Cancelar
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 }
-<NavInferior></NavInferior>
 @code {
 	[Parameter]
 	public int ProductoId { get; set; }
