@@ -11,125 +11,146 @@
 
 <PageTitle>Tu Carrito</PageTitle>
 
-<NavCentral></NavCentral>
-
-<div class="container mt-5">
-    <h2 class="mb-4 text-center">Carrito de Compras</h2>
+<div class="container my-5">
+    <h2 class="text-center display-5 fw-bold text-primary mb-5">
+        <i class="bi bi-cart-fill me-3"></i>Carrito de Compras
+    </h2>
 
     @if (!carritoservice.GetCartItems().Any())
     {
-        <div class="alert alert-secondary text-center py-4 shadow-sm" role="alert">
-            <i class="bi bi-cart-x-fill display-4 text-muted mb-3 d-block"></i>
-            <p class="lead fw-bold mb-3">Tu carrito está vacío.</p>
-            <p class="text-muted mb-4"><strong>No has añadido ningún producto todavía :'(</strong></p>
-            <a href="/" class="btn btn-dark btn-lg mt-3">Ir a la tienda</a>
+        <div class="card shadow-lg border-0 rounded-4 p-5">
+            <div class="card-body text-center">
+                <i class="bi bi-cart-x-fill display-1 text-muted mb-4 d-block"></i>
+                <p class="lead fw-bold mb-3">¡Tu carrito está vacío!</p>
+                <p class="text-muted mb-4">Parece que no has agregado productos a tu carrito todavía.</p>
+                <a href="/" class="btn btn-primary btn-lg mt-3 fw-bold">
+                    <i class="bi bi-shop me-2"></i>Ir a la tienda
+                </a>
+            </div>
         </div>
     }
     else
     {
-        <div class="table-responsive">
-            <table class="table table-hover table-striped">
-                <thead class="table-dark">
-                    <tr>
-                        <th scope="col"></th>
-                        <th scope="col">Producto</th>
-                        <th scope="col">Precio Unitario</th>
-                        <th scope="col">Cantidad</th>
-                        <th scope="col">Subtotal</th>
-                        <th scope="col"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in carritoservice.GetCartItems())
-                    {
-                        <tr>
-                            <td>
-                                @if (!string.IsNullOrEmpty(item.Producto.ProductoImagenUrl))
-                                {
-                                    <img src="@item.Producto.ProductoImagenUrl" alt="@item.Producto.ProductoNombre" style="width: 70px; height: 70px; object-fit: cover; border-radius: 5px;" />
-                                }
-                                else
-                                {
-                                    <img src="https://placehold.co/70x70/dee2e6/6c757d?text=No+Img" alt="No Image" style="width: 70px; height: 70px; object-fit: cover; border-radius: 5px;" />
-                                }
-                            </td>
-                            <td>@item.Producto.ProductoNombre</td>
-                            <td>RD$@item.Producto.ProductoMonto.ToString("N2", CultureInfo.GetCultureInfo("es-DO"))</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <button class="btn btn-sm btn-outline-secondary" @onclick="async () => await UpdateQuantity(item.Producto.ProductoId, item.Cantidad - 1)">-</button>
-                                    <input type="number" class="form-control text-center mx-2" style="width: 70px;"
-                                           value="@item.Cantidad"
-                                           @onchange="async e => await OnCantidadChanged(item.Producto.ProductoId, e.Value?.ToString())" />
-                                    <button class="btn btn-sm btn-outline-secondary" @onclick="async () => await UpdateQuantity(item.Producto.ProductoId, item.Cantidad + 1)">+</button>
-                                </div>
-                            </td>
-                            <td>RD$@item.Subtotal.ToString("N2", CultureInfo.GetCultureInfo("es-DO"))</td>
-                            <td>
-                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveItem(item.Producto.ProductoId)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="4" class="text-end fw-bold">Total:</td>
-                        <td class="fw-bold">RD$@carritoservice.GetTotalPrice().ToString("N2", CultureInfo.GetCultureInfo("es-DO"))</td>
-                        <td></td>
-                    </tr>
-                </tfoot>
-            </table>
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col" style="width: 100px;">Producto</th>
+                                <th scope="col"></th>
+                                <th scope="col">Precio</th>
+                                <th scope="col">Cantidad</th>
+                                <th scope="col">Subtotal</th>
+                                <th scope="col"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in carritoservice.GetCartItems())
+                            {
+                                <tr>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(item.Producto.ProductoImagenUrl))
+                                        {
+                                            <img src="@item.Producto.ProductoImagenUrl" alt="@item.Producto.ProductoNombre" class="img-fluid rounded-3" style="width: 70px; height: 70px; object-fit: cover;" />
+                                        }
+                                        else
+                                        {
+                                            <img src="https://placehold.co/70x70/dee2e6/6c757d?text=No+Img" alt="No Image" class="img-fluid rounded-3" style="width: 70px; height: 70px; object-fit: cover;" />
+                                        }
+                                    </td>
+                                    <td class="align-middle fw-bold">@item.Producto.ProductoNombre</td>
+                                    <td class="align-middle">RD$@item.Producto.ProductoMonto.ToString("N2", CultureInfo.GetCultureInfo("es-DO"))</td>
+                                    <td class="align-middle">
+                                        <div class="d-flex align-items-center">
+                                            <button class="btn btn-outline-secondary btn-sm" @onclick="async () => await UpdateQuantity(item.Producto.ProductoId, item.Cantidad - 1)">-</button>
+                                            <input type="number" class="form-control text-center mx-2" style="width: 70px;"
+                                                   value="@item.Cantidad"
+                                                   @onchange="async e => await OnCantidadChanged(item.Producto.ProductoId, e.Value?.ToString())" />
+                                            <button class="btn btn-outline-secondary btn-sm" @onclick="async () => await UpdateQuantity(item.Producto.ProductoId, item.Cantidad + 1)">+</button>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle fw-bold">RD$@item.Subtotal.ToString("N2", CultureInfo.GetCultureInfo("es-DO"))</td>
+                                    <td class="align-middle">
+                                        <button class="btn btn-danger btn-sm" @onclick="() => RemoveItem(item.Producto.ProductoId)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4" class="text-end fw-bold fs-5">Total:</td>
+                                <td class="fw-bold text-success fs-5">RD$@carritoservice.GetTotalPrice().ToString("N2", CultureInfo.GetCultureInfo("es-DO"))</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <div class="d-flex justify-content-between mt-4">
-            <button class="btn btn-danger" @onclick="ClearCart">Vaciar Carrito</button>
-            <button class="btn btn-success" @onclick="ValidarYMostrarFormulario">Proceder al Pago</button>
+            <button class="btn btn-danger btn-lg fw-bold" @onclick="ClearCart">
+                <i class="bi bi-x-circle me-2"></i>Vaciar Carrito
+            </button>
+            <button class="btn btn-success btn-lg fw-bold" @onclick="ValidarYMostrarFormulario">
+                <i class="bi bi-credit-card-fill me-2"></i>Proceder al Pago
+            </button>
         </div>
     }
 </div>
 
 @if (mostrandoFormularioPago)
 {
-    <div class="card mt-4 shadow-sm">
-        <div class="card-body">
-            <h4 class="card-title text-center">Datos de Pago</h4>
+    <div class="card mt-5 shadow-lg border-0 rounded-4">
+        <div class="card-body p-4">
+            <h4 class="card-title text-center fw-bold text-primary mb-4">
+                <i class="bi bi-journal-check me-2"></i>Datos de Pago
+            </h4>
 
             <EditForm Model="@datosPago">
                 <DataAnnotationsValidator />
 
-                <div class="mb-3">
-                    <label class="form-label">Nombre del Titular</label>
-                    <InputText class="form-control" placeholder="Propietario de la tarjeta" @bind-Value="datosPago.NombreTitular" />
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Nombre del Titular</label>
+                        <InputText class="form-control" placeholder="Propietario de la tarjeta" @bind-Value="datosPago.NombreTitular" />
+                        <ValidationMessage For="@(() => datosPago.NombreTitular)" class="text-danger" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Número de Tarjeta</label>
+                        <InputText class="form-control" placeholder="12 dígitos en adelante" @bind-Value="datosPago.NumeroTarjeta" />
+                        <ValidationMessage For="@(() => datosPago.NumeroTarjeta)" class="text-danger" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Fecha de Expiración</label>
+                        <InputText class="form-control" placeholder="MM/AA" @bind-Value="datosPago.FechaExpiracion" />
+                        <ValidationMessage For="@(() => datosPago.FechaExpiracion)" class="text-danger" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">CVV</label>
+                        <InputText class="form-control" placeholder="Código trasero de la tarjeta" @bind-Value="datosPago.CVV" />
+                        <ValidationMessage For="@(() => datosPago.CVV)" class="text-danger" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Dirección</label>
+                        <InputText class="form-control" placeholder="Dirección del envío" @bind-Value="datosPago.Direccion" />
+                        <ValidationMessage For="@(() => datosPago.Direccion)" class="text-danger" />
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Número de Tarjeta</label>
-                    <InputText class="form-control" placeholder="12 dígitos en adelante" @bind-Value="datosPago.NumeroTarjeta" />
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg fw-bold" @onclick="ConfirmarPago">
+                        <i class="bi bi-check-circle-fill me-2"></i>Confirmar Compra
+                    </button>
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Fecha de Expiración</label>
-                    <InputText class="form-control" placeholder="MM/AA" @bind-Value="datosPago.FechaExpiracion" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">CVV</label>
-                    <InputText class="form-control" placeholder="C&oacute;digo trasero de la tarjeta" @bind-Value="datosPago.CVV" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Direcci&oacute;n</label>
-                    <InputText class="form-control" placeholder="Direcci&oacute;n del env&iacute;o" @bind-Value="datosPago.Direccion" />
-                </div>
-
-                <button class="btn btn-success" @onclick="ConfirmarPago">Confirmar Compra</button>
             </EditForm>
         </div>
     </div>
 }
-<NavInferior></NavInferior>
+
 @code {
     [Inject]
     private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
