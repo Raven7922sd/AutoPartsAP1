@@ -6,7 +6,6 @@
 @attribute [Authorize(Roles = "Admin")]
 
 <PageTitle>Editar Cita</PageTitle>
-<NavCentral></NavCentral>
 
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -55,7 +54,6 @@
     </div>
 </div>
 
-<NavInferior></NavInferior>
 @code {
     [Parameter]
     public int CitaId { get; set; }

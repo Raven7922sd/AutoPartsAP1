@@ -5,190 +5,222 @@
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = "Admin")]
 
-<PageTitle>Citas Index</PageTitle>
-<NavCentral></NavCentral>
-<div class="container">
-	<div class="card shadow-lg">
-		<div class="card-header position-relative text-center">
-			<h4 class="card-title">Consulta de Citas</h4>
-		</div>
+<PageTitle>AutoParts | Citas Agendadas</PageTitle>
 
-		<div class="card-body">
-			<div class="d-flex justify-content-between align-items-center mb-5">
-				<h5 class="card-title mb-0">Filtros de Búsqueda</h5>
-			</div>
+<div class="container py-4">
+    <div class="card shadow-sm rounded-4 border-0">
+        <div class="card-header bg-primary text-white text-center py-3 rounded-top-4">
+            <h4 class="mb-0"><i class="bi bi-calendar-check me-2"></i> Registro de Citas</h4>
+        </div>
 
-			<div class="row g-3 align-items-end mb-4">
-				<div class="col-md-3">
-					<label class="form-label"><strong>Filtrar Por:</strong></label>
-					<InputSelect class="form-select" @bind-Value="Filtro">
-						<option value="" selected disabled>Seleccione una opción</option>
-						<option value="CitaId">Id</option>
-						<option value="ClienteNombre">Cliente</option>
-						<option value="ServicioSolicitado">Servicio</option>
-						<option value="CodigoConfirmacion">Código</option>
-					</InputSelect>
-					<label class="form-label mt-4"><strong>Desde:</strong></label>
-					<div class="input-group">
-						<span class="input-group-text bi bi-calendar-date"></span>
-						<input type="date" @bind="FechaDesde" class="form-control" />
-					</div>
-				</div>
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0 text-primary">
+                    <i class="bi bi-funnel-fill me-2"></i> Filtros de Búsqueda
+                </h5>
+            </div>
 
-				<div class="col-md-3">
-					<label class="form-label"><strong>Búsqueda</strong></label>
-					<div class="input-group">
-						<input class="form-control flex-grow-1" @bind-value="ValorFiltro" @oninput="FiltroCambiado" placeholder="Buscar" />
-						<button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
-					</div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Filtrar por:</label>
+                    <InputSelect class="form-select" @bind-Value="Filtro">
+                        <option value="" disabled selected>Seleccione una opción</option>
+                        <option value="CitaId">Id</option>
+                        <option value="ClienteNombre">Cliente</option>
+                        <option value="ServicioSolicitado">Servicio</option>
+                        <option value="CodigoConfirmacion">Código</option>
+                    </InputSelect>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Buscador</label>
+                    <div class="input-group">
+                        <input class="form-control" @bind="ValorFiltro" @oninput="FiltroCambiado" placeholder="Escriba aquí para buscar..." />
+                        <button type="button" class="btn btn-primary" @onclick="Buscar">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Fecha Desde:</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-calendar-date"></i></span>
+                        <input type="date" @bind="FechaDesde" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Fecha Hasta:</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-calendar-date-fill"></i></span>
+                        <input type="date" @bind="FechaHasta" class="form-control" />
+                    </div>
+                </div>
+            </div>
 
-					<div class="col-md-15">
-						<label class="form-label mt-4"><strong>Hasta:</strong></label>
-						<div class="input-group">
-							<span class="input-group-text bi bi-calendar-date-fill"></span>
-							<input type="date" class="form-control" @bind-value="FechaHasta" />
-						</div>
-					</div>
-				</div>
-			</div>
+            <hr class="mb-4">
 
-			<div class="table-responsive">
-				<table class="table table-hover">
-					<thead>
-						<tr>
-							<th>Cita Id</th>
-							<th>Cliente</th>
-							<th>Servicio</th>
-							<th>Fecha de Cita</th>
-							<th>Código</th>
-							<th>Estado</th>
-							<th>Acciones</th>
-						</tr>
-					</thead>
-					<tbody>
-						@if (ResultadoPaginado != null)
-						{
-							foreach (var cita in ResultadoPaginado.Items)
-							{
-								<tr>
-									<td>@cita.CitaId</td>
-									<td>@cita.ClienteNombre</td>
-									<td>@cita.ServicioSolicitado</td>
-									<td>@cita.FechaCita.ToString("dd/MM/yyyy")</td>
-									<td><span class="badge bg-secondary">@cita.CodigoConfirmacion</span></td>
-									<td>
-										@if (cita.Confirmada)
-										{
-											<span class="badge bg-success">Confirmada</span>
-										}
-										else
-										{
-											<span class="badge bg-warning text-dark">Pendiente</span>
-										}
-									</td>
-									<td>
-										<a href="Citas/Edit/@cita.CitaId" class="btn btn-outline-primary bi bi-pencil-square me-2"></a>
-										<button @onclick="() => ConfirmarCitaAsync(cita.CitaId)"
-												disabled="@cita.Confirmada"
-												class="btn btn-outline-success bi bi-check-circle-fill"
-												title="@(cita.Confirmada ? "Cita ya confirmada" : "Confirmar Cita")">
-										</button>
-									</td>
-								</tr>
-							}
-						}
-					</tbody>
-				</table>
-			</div>
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th scope="col">Cita Id</th>
+                            <th scope="col">Cliente</th>
+                            <th scope="col">Servicio</th>
+                            <th scope="col">Fecha de Cita</th>
+                            <th scope="col">Código</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ResultadoPaginado?.Items == null)
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">Cargando citas...</td>
+                            </tr>
+                        }
+                        else if (!ResultadoPaginado.Items.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">No se encontraron citas.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var cita in ResultadoPaginado.Items)
+                            {
+                                <tr>
+                                    <td>@cita.CitaId</td>
+                                    <td>@cita.ClienteNombre</td>
+                                    <td>@cita.ServicioSolicitado</td>
+                                    <td>@cita.FechaCita.ToString("dd/MM/yyyy")</td>
+                                    <td><span class="badge bg-secondary rounded-pill">@cita.CodigoConfirmacion</span></td>
+                                    <td>
+                                        @if (cita.Confirmada)
+                                        {
+                                            <span class="badge bg-success">Confirmada</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark">Pendiente</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="Citas/Edit/@cita.CitaId" class="btn btn-outline-primary btn-sm" title="Editar">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <button @onclick="() => ConfirmarCitaAsync(cita.CitaId)"
+                                                disabled="@cita.Confirmada"
+                                                class="btn btn-outline-success btn-sm"
+                                                title="@(cita.Confirmada ? "Cita ya confirmada" : "Confirmar Cita")">
+                                            <i class="bi bi-check-circle-fill"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
 
-			@if (ResultadoPaginado != null && ResultadoPaginado.TotalPaginas > 1)
-			{
-				<nav aria-label="Paginación">
-					<ul class="pagination justify-content-center mt-4">
-						<li class="page-item @(ResultadoPaginado.TienePaginaAnterior ? "" : "disabled")">
-							<button class="page-link" @onclick="() => CambiarPagina(PaginaActual - 1)">Anterior</button>
-						</li>
-						@for (int i = 1; i <= ResultadoPaginado.TotalPaginas; i++)
-						{
-							<li class="page-item @(i == PaginaActual ? "active" : "")">
-								<button class="page-link" @onclick="() => CambiarPagina(i)">@i</button>
-							</li>
-						}
-						<li class="page-item @(ResultadoPaginado.TienePaginaSiguiente ? "" : "disabled")">
-							<button class="page-link" @onclick="() => CambiarPagina(PaginaActual + 1)">Siguiente</button>
-						</li>
-					</ul>
-				</nav>
-			}
-		</div>
-	</div>
+            @if (ResultadoPaginado != null)
+            {
+                <div class="d-flex justify-content-end align-items-center mt-4 pt-3 border-top">
+                    <div class="d-flex gap-4">
+                        <div class="d-flex align-items-center">
+                            <strong class="me-2">Total de Citas:</strong>
+                            <span class="badge bg-primary fs-6">@ResultadoPaginado.TotalPaginas</span>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (ResultadoPaginado != null && ResultadoPaginado.TotalPaginas > 1)
+            {
+                <nav aria-label="Paginación" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item @(ResultadoPaginado.TienePaginaAnterior ? "" : "disabled")">
+                            <button class="page-link" @onclick="() => CambiarPagina(PaginaActual - 1)">Anterior</button>
+                        </li>
+                        @for (int i = 1; i <= ResultadoPaginado.TotalPaginas; i++)
+                        {
+                            <li class="page-item @(i == PaginaActual ? "active" : "")">
+                                <button class="page-link" @onclick="() => CambiarPagina(i)">@i</button>
+                            </li>
+                        }
+                        <li class="page-item @(ResultadoPaginado.TienePaginaSiguiente ? "" : "disabled")">
+                            <button class="page-link" @onclick="() => CambiarPagina(PaginaActual + 1)">Siguiente</button>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
 </div>
-<NavInferior></NavInferior>
 @code {
-	private PaginacionResultado<Cita> ResultadoPaginado { get; set; }
-	private int PaginaActual { get; set; } = 1;
-	private const int TamañoPagina = 5;
-	private CancellationTokenSource? _cts;
-	public string Filtro { get; set; } = string.Empty;
-	public string ValorFiltro { get; set; } = string.Empty;
-	public DateTime? FechaDesde { get; set; }
-	public DateTime? FechaHasta { get; set; }
+    private PaginacionResultado<Cita> ResultadoPaginado { get; set; }
+    private int PaginaActual { get; set; } = 1;
+    private const int TamañoPagina = 5;
+    private CancellationTokenSource? _cts;
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+    public DateTime? FechaDesde { get; set; }
+    public DateTime? FechaHasta { get; set; }
 
-	protected override async Task OnInitializedAsync()
-	{
-		await CargarPagina(PaginaActual);
-	}
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarPagina(PaginaActual);
+    }
 
-	private async Task Buscar()
-	{
-		PaginaActual = 1;
-		await CargarPagina(PaginaActual);
-	}
+    private async Task Buscar()
+    {
+        PaginaActual = 1;
+        await CargarPagina(PaginaActual);
+    }
 
-	private async Task FiltroCambiado(ChangeEventArgs e)
-	{
-		ValorFiltro = e.Value?.ToString() ?? string.Empty;
+    private async Task FiltroCambiado(ChangeEventArgs e)
+    {
+        ValorFiltro = e.Value?.ToString() ?? string.Empty;
 
-		_cts?.Cancel();
-		_cts = new CancellationTokenSource();
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
 
-		try
-		{
-			await Task.Delay(400, _cts.Token);
-			await Buscar();
-			StateHasChanged();
-		}
-		catch (TaskCanceledException)
-		{
-		}
-	}
+        try
+        {
+            await Task.Delay(400, _cts.Token);
+            await Buscar();
+            StateHasChanged();
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
 
-	private async Task CargarPagina(int pagina)
-	{
-		ResultadoPaginado = await citaService.BuscarCitasAsync(
-			Filtro, ValorFiltro, FechaDesde, FechaHasta, pagina, TamañoPagina);
-		PaginaActual = pagina;
-	}
+    private async Task CargarPagina(int pagina)
+    {
+        ResultadoPaginado = await citaService.BuscarCitasAsync(
+            Filtro, ValorFiltro, FechaDesde, FechaHasta, pagina, TamañoPagina);
+        PaginaActual = pagina;
+    }
 
-	private async Task CambiarPagina(int nuevaPagina)
-	{
-		if (nuevaPagina >= 1 && nuevaPagina <= ResultadoPaginado.TotalPaginas)
-		{
-			await CargarPagina(nuevaPagina);
-		}
-	}
+    private async Task CambiarPagina(int nuevaPagina)
+    {
+        if (nuevaPagina >= 1 && nuevaPagina <= ResultadoPaginado.TotalPaginas)
+        {
+            await CargarPagina(nuevaPagina);
+        }
+    }
 
-	private async Task ConfirmarCitaAsync(int citaId)
-	{
-		var exito = await citaService.ConfirmarCitaAsync(citaId);
-		if (exito)
-		{
-			toastService.ShowSuccess($"Cita #{citaId} confirmada con éxito.");
-			await CargarPagina(PaginaActual);
-		}
-		else
-		{
-			toastService.ShowError($"Ocurrió un error al confirmar la cita #{citaId}.");
-		}
-	}
+    private async Task ConfirmarCitaAsync(int citaId)
+    {
+        var exito = await citaService.ConfirmarCitaAsync(citaId);
+        if (exito)
+        {
+            toastService.ShowSuccess($"Cita #{citaId} confirmada con éxito.");
+            await CargarPagina(PaginaActual);
+        }
+        else
+        {
+            toastService.ShowError($"Ocurrió un error al confirmar la cita #{citaId}.");
+        }
+    }
 }
