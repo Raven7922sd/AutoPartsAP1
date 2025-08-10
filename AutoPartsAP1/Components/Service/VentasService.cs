@@ -4,6 +4,7 @@ using AutoPartsAP1.Components.Models.Paginacion;
 using AutoPartsAP1.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace AutoPartsAP1.Components.Service;
 
@@ -115,21 +116,31 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
     }
 
     public async Task<PaginacionResultado<Ventas>> BuscarVentasAsync(
-        string filtroCampo,
-        string valorFiltro,
-        DateTime? fechaDesde,
-        DateTime? fechaHasta,
-        int pagina,
-        int tamanioPagina)
+     string filtroCampo,
+     string valorFiltro,
+     DateTime? fechaDesde,
+     DateTime? fechaHasta,
+     int pagina,
+     int tamanioPagina)
     {
         Expression<Func<Ventas, bool>> filtro = t => true;
 
         if (filtroCampo == "VentaId" && int.TryParse(valorFiltro, out var ventaid))
             filtro = filtro.AndAlso(t => t.VentaId == ventaid);
-        else if (filtroCampo == "UsuarioNombre")
-            filtro = filtro.AndAlso(t => t.Usuario != null && t.Usuario.UserName.ToLower().Contains(valorFiltro.ToLower()));
-        else if (filtroCampo == "ProductoNombre")
-            filtro = filtro.AndAlso(t => t.VentasDetalles.Any(d => d.Producto.ProductoNombre.ToLower().Contains(valorFiltro.ToLower())));
+        else if (filtroCampo == "Usuario")
+            filtro = filtro.AndAlso(t => t.Usuario != null &&
+                                         t.Usuario.Email.ToLower().Contains(valorFiltro.ToLower()));
+        else if (filtroCampo == "Producto")
+            filtro = filtro.AndAlso(t => t.VentasDetalles
+                                         .Any(d => d.Producto.ProductoNombre.ToLower().Contains(valorFiltro.ToLower())));
+        else if (filtroCampo == "Monto" && double.TryParse(valorFiltro, out var monto))
+            filtro = filtro.AndAlso(m => m.VentasDetalles.FirstOrDefault().Venta.Total == monto);
+
+        if (filtroCampo is "Uso General" or "Motocicletas" or "Autos o Vehículos Ligeros" or "Vehículos Pesados")
+        {
+            filtro = filtro.AndAlso(t => t.VentasDetalles
+                                         .Any(d => d.Producto.Categoria.ToLower() == filtroCampo.ToLower()));
+        }
 
         if (fechaDesde.HasValue)
             filtro = filtro.AndAlso(t => t.Fecha >= fechaDesde.Value);
@@ -159,6 +170,7 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
             TotalPaginas = totalPaginas
         };
     }
+
     public async Task<PagoModel?> GuardarPago(PagoModel pago)
     {
         await using var context = await DbFactory.CreateDbContextAsync();
