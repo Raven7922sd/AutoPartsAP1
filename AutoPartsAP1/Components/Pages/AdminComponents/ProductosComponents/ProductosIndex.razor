@@ -8,120 +8,148 @@
 <PageTitle>Registro</PageTitle>
 
 <div class="container py-4">
-    <div class="card shadow-sm rounded-4 border-0">
-        <div class="card-header bg-primary text-white text-center py-3 rounded-top-4">
-            <h4 class="mb-0">Registro de Productos</h4>
-        </div>
+	<div class="card shadow-sm rounded-4 border-0">
+		<div class="card-header bg-primary text-white text-center py-3 rounded-top-4">
+			<h4 class="mb-0">Registro de Productos</h4>
+		</div>
 
-        <div class="card-body p-4">
+		<div class="card-body p-4">
 
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="mb-0 text-primary">
-                    <i class="bi bi-funnel-fill me-2"></i> Filtros de Búsqueda
-                </h5>
-                <a href="/Productos/Create" class="btn btn-success fw-bold d-flex align-items-center">
-                    <i class="bi bi-plus-circle me-2"></i> Crear Producto
-                </a>
-            </div>
+			<div class="d-flex justify-content-between align-items-center mb-4">
+				<h5 class="mb-0 text-primary">
+					<i class="bi bi-funnel-fill me-2"></i> Filtros de Búsqueda
+				</h5>
+				<a href="/Productos/Create" class="btn btn-success fw-bold d-flex align-items-center">
+					<i class="bi bi-plus-circle me-2"></i> Crear Producto
+				</a>
+			</div>
 
-            <div class="row g-3 mb-4">
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">Filtrar por</label>
-                    <InputSelect class="form-select" @bind-Value="Filtro">
-                        <option value="" disabled selected>Seleccione una opción</option>
-                        <option value="ProductoId">Id</option>
-                        <option value="Nombre">Nombre</option>
-                        <option value="Monto">Monto</option>
-                        <option value="Descripción">Descripci&oacute;n</option>
-                        <option value="Uso General">Categor&iacute;a: "Uso General"</option>
-                        <option value="Motocicletas">Categor&iacute;a: "Motocicletas"</option>
-                        <option value="Autos o Vehículos Ligeros">Categor&iacute;a: "Veh&iacute;culos Ligeros"</option>
-                        <option value="Vehículos Pesados">Categor&iacute;a: "Veh&iacute;culos Pesados"</option>
-                    </InputSelect>
-                </div>
+			<div class="row g-3 mb-4">
+				<div class="col-md-3">
+					<label class="form-label fw-bold">Filtrar por</label>
+					<InputSelect class="form-select" @bind-Value="Filtro">
+						<option value="" disabled selected>Seleccione una opción</option>
+						<option value="ProductoId">Id</option>
+						<option value="Nombre">Nombre</option>
+						<option value="Monto">Monto</option>
+						<option value="Descripción">Descripci&oacute;n</option>
+						<option value="Uso General">Categor&iacute;a: "Uso General"</option>
+						<option value="Motocicletas">Categor&iacute;a: "Motocicletas"</option>
+						<option value="Autos o Vehículos Ligeros">Categor&iacute;a: "Veh&iacute;culos Ligeros"</option>
+						<option value="Vehículos Pesados">Categor&iacute;a: "Veh&iacute;culos Pesados"</option>
+					</InputSelect>
+				</div>
 
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">Buscador</label>
-                    <div class="input-group">
-                        <input class="form-control" @bind="ValorFiltro" @oninput="FiltroCambiado" placeholder="Escriba aquí para buscar..." />
-                        <button type="button" class="btn btn-primary" @onclick="Buscar">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </div>
-                </div>
+				<div class="col-md-3">
+					<label class="form-label fw-bold">Buscador</label>
+					<div class="input-group">
+						<input class="form-control" @bind="ValorFiltro" @oninput="FiltroCambiado" placeholder="Escriba aquí para buscar..." />
+						<button type="button" class="btn btn-primary" @onclick="Buscar">
+							<i class="bi bi-search"></i>
+						</button>
+					</div>
+				</div>
 
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">Fecha Desde</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light"><i class="bi bi-calendar-date"></i></span>
-                        <input type="date" @bind="FechaDesde" class="form-control" />
-                    </div>
-                </div>
+				<div class="col-md-3">
+					<label class="form-label fw-bold">Fecha Desde</label>
+					<div class="input-group">
+						<span class="input-group-text bg-light"><i class="bi bi-calendar-date"></i></span>
+						<input type="date" @bind="FechaDesde" class="form-control" />
+					</div>
+				</div>
 
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">Fecha Hasta</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light"><i class="bi bi-calendar-date-fill"></i></span>
-                        <input type="date" @bind="FechaHasta" class="form-control" />
-                    </div>
-                </div>
-            </div>
+				<div class="col-md-3">
+					<label class="form-label fw-bold">Fecha Hasta</label>
+					<div class="input-group">
+						<span class="input-group-text bg-light"><i class="bi bi-calendar-date-fill"></i></span>
+						<input type="date" @bind="FechaHasta" class="form-control" />
+					</div>
+				</div>
+			</div>
 
-            <hr class="mb-4">
+			<hr class="mb-4">
 
-            <div class="table-responsive">
-                <table class="table table-hover table-bordered align-middle">
-                    <thead class="bg-light">
-                        <tr>
-                            <th scope="col">ID</th>
-                            <th scope="col">Nombre</th>
-                            <th scope="col">Descripción</th>
-                            <th scope="col">Monto</th>
-                            <th scope="col">Cantidad</th>
-                            <th scope="col">Categoría</th>
-                            <th scope="col">Fecha</th>
-                            <th scope="col" class="text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var productos in ListaProductos)
-                        {
-                            <tr>
-                                <td>@productos.ProductoId</td>
-                                <td>@productos.ProductoNombre</td>
-                                <td>@productos.ProductoDescripcion</td>
-                                <td>@productos.ProductoMonto.ToString("C")</td>
-                                <td class="text-start">@productos.ProductoCantidad</td>
-                                <td>@productos.Categoria</td>
-                                <td>@productos.Fecha.ToString("dd/MM/yyyy")</td>
-                                <td class="text-center">
-                                    <a href="/Productos/Edit/@productos.ProductoId" class="btn btn-outline-primary btn-sm" title="Editar">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+			<div class="table-responsive">
+				<table class="table table-hover table-bordered align-middle">
+					<thead class="bg-light">
+						<tr>
+							<th scope="col">ID</th>
+							<th scope="col">Nombre</th>
+							<th scope="col">Descripción</th>
+							<th scope="col">Monto</th>
+							<th scope="col">Cantidad</th>
+							<th scope="col">Categoría</th>
+							<th scope="col">Fecha</th>
+							<th scope="col" class="text-center">Acciones</th>
+						</tr>
+					</thead>
+					<tbody>
+						@if (ResultadoPaginado != null)
+						{
+							@foreach (var productos in ResultadoPaginado.Items)
+							{
+								<tr>
+									<td>@productos.ProductoId</td>
+									<td>@productos.ProductoNombre</td>
+									<td>@productos.ProductoDescripcion</td>
+									<td>@productos.ProductoMonto.ToString("C")</td>
+									<td class="text-start">@productos.ProductoCantidad</td>
+									<td>@productos.Categoria</td>
+									<td>@productos.Fecha.ToString("dd/MM/yyyy")</td>
+									<td class="text-center">
+										<a href="/Productos/Edit/@productos.ProductoId" class="btn btn-outline-primary btn-sm" title="Editar">
+											<i class="bi bi-pencil-square"></i>
+										</a>
+									</td>
+								</tr>
+							}
+						}
+					</tbody>
+				</table>
+			</div>
 
-            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                <div class="d-flex gap-3">
-                    <div class="d-flex align-items-center">
-                        <strong class="me-2">Conteo:</strong>
-                        <span class="badge bg-secondary fs-6">@ListaProductos.Count</span>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <strong class="me-2">Total:</strong>
-                        <span class="badge bg-primary fs-6">@ListaProductos.Sum(m => m.ProductoMonto).ToString("C")</span>
-                    </div>
-                </div>
-            </div>
+			@if (ResultadoPaginado != null && ResultadoPaginado.TotalPaginas > 1)
+			{
+				<nav aria-label="Paginación">
+					<ul class="pagination justify-content-center mt-4">
+						<li class="page-item @(ResultadoPaginado.TienePaginaAnterior ? "" : "disabled")">
+							<button class="page-link" @onclick="() => CambiarPagina(PaginaActual - 1)" tabindex="-1" aria-disabled="@(ResultadoPaginado.TienePaginaAnterior ? "false" : "true")">Anterior</button>
+						</li>
 
-        </div>
-    </div>
+						@for (int i = 1; i <= ResultadoPaginado.TotalPaginas; i++)
+						{
+							<li class="page-item @(i == PaginaActual ? "active" : "")">
+								<button class="page-link" @onclick="() => CambiarPagina(i)">@i</button>
+							</li>
+						}
+
+						<li class="page-item @(ResultadoPaginado.TienePaginaSiguiente ? "" : "disabled")">
+							<button class="page-link" @onclick="() => CambiarPagina(PaginaActual + 1)">Siguiente</button>
+						</li>
+					</ul>
+				</nav>
+			}
+
+			<div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+				<div class="d-flex gap-3">
+					<div class="d-flex align-items-center">
+						<strong class="me-2">Conteo:</strong>
+						<span class="badge bg-secondary fs-6">@ListaProductos.Count</span>
+					</div>
+					<div class="d-flex align-items-center">
+						<strong class="me-2">Total:</strong>
+						<span class="badge bg-primary fs-6">@ListaProductos.Sum(m => m.ProductoMonto).ToString("C")</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
+
 @code {
+	private PaginacionResultado<Productos> ResultadoPaginado { get; set; }
+	private int PaginaActual { get; set; } = 1;
+	private const int TamañoPagina = 5;
 	public List<Productos> ListaProductos { get; set; } = new List<Productos>();
 	public string Filtro { get; set; } = string.Empty;
 	public string ValorFiltro { get; set; } = string.Empty;
@@ -131,15 +159,36 @@
 
 	protected override async Task OnInitializedAsync()
 	{
-		ListaProductos = await ProductosService.Listar(a => a.ProductoId > 0);
-		FechaDesde = null;
-		FechaHasta = null;
+		await CargarPagina(PaginaActual);
 	}
 
-	public async Task Buscar()
+	private async Task Buscar()
+	{
+		PaginaActual = 1;
+		await CargarPagina(PaginaActual);
+	}
+
+
+	private async Task CargarPagina(int pagina)
 	{
 		DateTime? fechaHastaAjustada = FechaHasta?.Date.AddDays(1).AddTicks(-1);
-		ListaProductos = await ProductosService.BuscarFiltradosAsync(Filtro, ValorFiltro, FechaDesde, fechaHastaAjustada);
+		ResultadoPaginado = await ProductosService.BuscarFiltradosAsync(
+			Filtro,
+			ValorFiltro,
+			FechaDesde,
+			fechaHastaAjustada,
+			pagina,
+			TamañoPagina);
+
+		PaginaActual = pagina;
+	}
+
+	private async Task CambiarPagina(int nuevaPagina)
+	{
+		if (nuevaPagina >= 1 && nuevaPagina <= ResultadoPaginado.TotalPaginas)
+		{
+			await CargarPagina(nuevaPagina);
+		}
 	}
 
 	private async Task FiltroCambiado(ChangeEventArgs e)
