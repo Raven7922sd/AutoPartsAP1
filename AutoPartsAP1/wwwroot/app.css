@@ -504,3 +504,77 @@ body {
             color: white;
             border-color: var(--bs-primary);
         }
+
+/*Css para ManageLayout*/
+
+.account-layout-container {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+.account-layout-header {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--bs-primary);
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.account-card {
+    border-radius: 1rem;
+    border: 1px solid var(--bs-gray-300);
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.account-card-nav:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+}
+
+.account-card-content {
+    min-height: 50vh;
+}
+
+.manage-nav-menu-item a {
+    color: var(--bs-secondary);
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease-in-out;
+}
+
+    .manage-nav-menu-item a:hover {
+        background-color: var(--bs-primary);
+        color: var(--bs-white);
+    }
+
+    .manage-nav-menu-item a.active {
+        background-color: var(--bs-primary);
+        color: var(--bs-white);
+    }
+
+    /*Css para MisCitas*/
+
+.appointment-accordion .accordion-item {
+    border: none;
+    border-radius: 1rem;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.appointment-accordion .accordion-button {
+    background-color: var(--bs-light);
+    color: var(--bs-dark);
+    font-size: 1.1rem;
+    padding: 1rem 1.5rem;
+    border-radius: 1rem;
+}
+
+    .appointment-accordion .accordion-button:not(.collapsed) {
+        background-color: var(--bs-primary);
+        color: var(--bs-white);
+        box-shadow: none;
+    }
+
+.appointment-accordion .accordion-body {
+    padding: 1.5rem;
+}
