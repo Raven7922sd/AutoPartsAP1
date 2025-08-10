@@ -24,9 +24,13 @@
                     <InputSelect class="form-select" @bind-Value="Filtro">
                         <option value="" selected disabled>Seleccione una opción</option>
                         <option value="VentaId">Id</option>
-                        <option value="ClienteNombre">Cliente</option>
-                        <option value="Descripcion">Sistema</option>
-                        <option value="Monto">Monto</option>
+                        <option value="Usuario">Usuario</option>
+                        <option value="Producto">Producto</option>
+                        <option value="Monto">Total</option>
+                        <option value="Uso General">Categor&iacute;a: "Uso General"</option>
+                        <option value="Motocicletas">Categor&iacute;a: "Motocicletas"</option>
+                        <option value="Autos o Vehículos Ligeros">Categor&iacute;a: "Veh&iacute;culos Ligeros"</option>
+                        <option value="Vehículos Pesados">Categor&iacute;a: "Veh&iacute;culos Pesados"</option>
                     </InputSelect>
                 </div>
 
@@ -68,7 +72,7 @@
                             <th scope="col">Producto</th>
                             <th scope="col">Categoría</th>
                             <th scope="col" class="text-center">Cantidad</th>
-                            <th scope="col" class="text-end">Monto</th>
+                            <th scope="col" class="text-end">Total</th>
                             <th scope="col">Fecha</th>
                             <th scope="col" class="text-center">Acciones</th>
                         </tr>
@@ -162,12 +166,21 @@
 		}
 	}
 
-	private async Task CargarPagina(int pagina)
-	{
-		ResultadoPaginado = await ventaService.BuscarVentasAsync(
-		Filtro, ValorFiltro, FechaDesde, FechaHasta, pagina, TamañoPagina);
-		PaginaActual = pagina;
-	}
+    private async Task CargarPagina(int pagina)
+    {
+        DateTime? fechaHastaAjustada = FechaHasta?.Date.AddDays(1).AddTicks(-1);
+
+        ResultadoPaginado = await ventaService.BuscarVentasAsync(
+            Filtro,
+            ValorFiltro,
+            FechaDesde,
+            fechaHastaAjustada,
+            pagina,
+            TamañoPagina);
+
+        PaginaActual = pagina;
+    }
+
 
 	private async Task CambiarPagina(int nuevaPagina)
 	{
