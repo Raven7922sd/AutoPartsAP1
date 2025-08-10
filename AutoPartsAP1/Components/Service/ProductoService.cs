@@ -1,4 +1,6 @@
-﻿using AutoPartsAP1.Components.Models;
+﻿using AutoPartsAP1.Components.Extensions;
+using AutoPartsAP1.Components.Models;
+using AutoPartsAP1.Components.Models.Paginacion;
 using AutoPartsAP1.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -59,51 +61,62 @@ public class ProductoService(IDbContextFactory<ApplicationDbContext>DbFactory)
         await using var context = await DbFactory.CreateDbContextAsync();
         return await context.Producto.Where(criterio).AsNoTracking().ToListAsync();
     }
-    public async Task<List<Productos>> BuscarFiltradosAsync(
-    string filtroCampo,
-    string valorFiltro,
-    DateTime? fechaDesde,
-    DateTime? fechaHasta)
+    public async Task<PaginacionResultado<Productos>> BuscarFiltradosAsync(
+        string filtroCampo,
+        string valorFiltro,
+        DateTime? fechaDesde,
+        DateTime? fechaHasta,
+        int pagina,
+        int tamanioPagina)
     {
-        await using var context = await DbFactory.CreateDbContextAsync();
-
-        IQueryable<Productos> query = context.Producto.AsNoTracking();
+        Expression<Func<Productos, bool>> filtro = p => true;
 
         if (!string.IsNullOrWhiteSpace(valorFiltro))
         {
             var valor = valorFiltro.ToLower();
 
             if (filtroCampo == "ProductoId" && int.TryParse(valorFiltro, out var productoId))
-            {
-                query = query.Where(a => a.ProductoId == productoId);
-            }
+                filtro = filtro.AndAlso(p => p.ProductoId == productoId);
             else if (filtroCampo == "Nombre")
-            {
-                query = query.Where(a => a.ProductoNombre.ToLower().Contains(valor));
-            }            
+                filtro = filtro.AndAlso(p => p.ProductoNombre.ToLower().Contains(valor));
             else if (filtroCampo == "Descripción")
-            {
-                query = query.Where(a => a.ProductoDescripcion.ToLower().Contains(valor));
-            }
+                filtro = filtro.AndAlso(p => p.ProductoDescripcion.ToLower().Contains(valor));
             else if (filtroCampo == "Monto" && double.TryParse(valorFiltro, out var monto))
-            {
-                query = query.Where(m => m.ProductoMonto == monto);
-            }
+                filtro = filtro.AndAlso(p => p.ProductoMonto == monto);
         }
 
         if (filtroCampo is "Uso General" or "Motocicletas" or "Autos o Vehículos Ligeros" or "Vehículos Pesados")
         {
-            query = query.Where(m => m.Categoria.ToLower() == filtroCampo.ToLower());
+            filtro = filtro.AndAlso(p => p.Categoria.ToLower() == filtroCampo.ToLower());
         }
 
         if (fechaDesde.HasValue)
-            query = query.Where(f => f.Fecha >= fechaDesde.Value);
-
+            filtro = filtro.AndAlso(p => p.Fecha >= fechaDesde.Value);
         if (fechaHasta.HasValue)
-            query = query.Where(f => f.Fecha <= fechaHasta.Value);
+            filtro = filtro.AndAlso(p => p.Fecha <= fechaHasta.Value);
 
-        return await query.OrderBy(f => f.Fecha).ToListAsync();
+        await using var context = await DbFactory.CreateDbContextAsync();
+
+        var totalRegistros = await context.Producto.CountAsync(filtro); // 👈 plural
+        var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)tamanioPagina);
+
+        var productos = await context.Producto // 👈 plural
+            .Where(filtro)
+            .OrderBy(p => p.Fecha)
+            .Skip((pagina - 1) * tamanioPagina)
+            .Take(tamanioPagina)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return new PaginacionResultado<Productos>
+        {
+            Items = productos,
+            PaginaActual = pagina,
+            TotalPaginas = totalPaginas
+        };
     }
+
+
 
     public async Task<bool> RestarExistenciaProductoAsync(int productoId, int cantidad)
     {
