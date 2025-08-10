@@ -80,15 +80,20 @@ public class ProductoService(IDbContextFactory<ApplicationDbContext>DbFactory)
             else if (filtroCampo == "Nombre")
             {
                 query = query.Where(a => a.ProductoNombre.ToLower().Contains(valor));
+            }            
+            else if (filtroCampo == "Descripción")
+            {
+                query = query.Where(a => a.ProductoDescripcion.ToLower().Contains(valor));
             }
             else if (filtroCampo == "Monto" && double.TryParse(valorFiltro, out var monto))
             {
                 query = query.Where(m => m.ProductoMonto == monto);
             }
-            else if (filtroCampo == "Cantidad" && double.TryParse(valorFiltro, out var cantidad))
-            {
-                query = query.Where(m => m.ProductoCantidad == cantidad);
-            }
+        }
+
+        if (filtroCampo is "Uso General" or "Motocicletas" or "Autos o Vehículos Ligeros" or "Vehículos Pesados")
+        {
+            query = query.Where(m => m.Categoria.ToLower() == filtroCampo.ToLower());
         }
 
         if (fechaDesde.HasValue)
