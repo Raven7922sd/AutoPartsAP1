@@ -1,27 +1,29 @@
 ﻿@inherits LayoutComponentBase
 @layout AutoPartsAP1.Components.Layout.MainLayout
-<NavCentral></NavCentral>
-<h1 class="text-center display-5 fw-bold text-muted mb-4">Administra tu cuenta</h1>
 
-<div class="mb-4">
-    <h2 class="h4 text-muted text-center">Cambia la configuraci&oacute;n de tu cuenta</h2>
-    <hr class="mb-4" />
-</div>
+<div class="container account-layout-container">
 
-<div class="row">
-    <div class="col-lg-3 mb-4">
-        <div class="card shadow-sm border-0 rounded-4">
-            <div class="card-body px-3 py-4">
-                <ManageNavMenu />
+    <h1 class="account-layout-header">Configuración de la cuenta</h1>
+    <p class="text-center text-muted mb-5">
+        Administra la información de tu perfil, seguridad y preferencias.
+    </p>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card account-card account-card-nav shadow-sm">
+                <div class="card-body p-4">
+                    <ManageNavMenu />
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card account-card account-card-content shadow-sm">
+                <div class="card-body p-4">
+                    @Body
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-lg-9">
-        <div class="card shadow-sm border-0 rounded-4">
-            <div class="card-body p-4">
-                @Body
-            </div>
-        </div>
-    </div>
+
 </div>
-<NavInferior></NavInferior>
