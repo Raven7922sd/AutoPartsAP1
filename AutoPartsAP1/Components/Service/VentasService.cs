@@ -1,10 +1,10 @@
 ﻿using AutoPartsAP1.Components.Extensions;
 using AutoPartsAP1.Components.Models;
 using AutoPartsAP1.Components.Models.Paginacion;
+using AutoPartsAP1.Components.Services;
 using AutoPartsAP1.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace AutoPartsAP1.Components.Service;
 
@@ -26,19 +26,46 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
 
     public async Task<bool> Insertar(Ventas ventas)
     {
-        using var context = await DbFactory.CreateDbContextAsync();
-        context.Ventas.Add(ventas);
+        await using var context = await DbFactory.CreateDbContextAsync();
+        await using var transaction = await context.Database.BeginTransactionAsync();
 
-        foreach (var detalle in ventas.VentasDetalles)
+        try
         {
-            var producto = await context.Producto.FindAsync(detalle.ProductoId);
-            if (producto != null)
-            {
-                producto.ProductoCantidad -= detalle.Cantidad;
-            }
-        }
+            context.Ventas.Add(ventas);
 
-        return await context.SaveChangesAsync() > 0;
+            foreach (var detalle in ventas.VentasDetalles)
+            {
+                var producto = await context.Producto.FindAsync(detalle.ProductoId);
+                if (producto != null)
+                {
+
+                    if (producto.ProductoCantidad < detalle.Cantidad)
+                    {
+
+                        await transaction.RollbackAsync();
+                        return false;
+                    }
+
+                    producto.ProductoCantidad -= detalle.Cantidad;
+                }
+                else
+                {
+                    await transaction.RollbackAsync();
+                    return false;
+                }
+            }
+
+            var cambios = await context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            return cambios > 0;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            return false;
+        }
     }
 
     public async Task<Ventas?> BuscarVentas(int Ventaid)
@@ -91,29 +118,6 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
             return false;
         }
     }
-
-    //public async Task<List<Ventas>> ListarVentas(Expression<Func<Ventas, bool>> criterio)
-    //{
-    //    await using var contexto = await DbFactory.CreateDbContextAsync();
-    //    return await contexto.Ventas
-    //        .Where(criterio)
-    //        .Include(v => v.Usuario)
-    //        .Include(v => v.VentasDetalles)
-    //        .ThenInclude(d => d.Producto)
-    //        .AsNoTracking()
-    //        .ToListAsync();
-    //}
-
-    //public async Task<List<Ventas>> ObtenerVentasPorUsuario(string userId)
-    //{
-    //    await using var contexto = await DbFactory.CreateDbContextAsync();
-    //    return await contexto.Ventas
-    //        .Include(v => v.VentasDetalles)
-    //        .ThenInclude(d => d.Producto)
-    //        .Where(v => v.ApplicationUserId == userId)
-    //        .OrderByDescending(v => v.Fecha)
-    //        .ToListAsync();
-    //}
 
     public async Task<PaginacionResultado<Ventas>> BuscarVentasAsync(
      string filtroCampo,
@@ -187,9 +191,7 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
     public async Task<bool> Modificar(Ventas ventas)
     {
         if (ventas.VentasDetalles == null)
-        {
             ventas.VentasDetalles = new List<VentasDetalles>();
-        }
 
         using var context = await DbFactory.CreateDbContextAsync();
 
@@ -201,12 +203,13 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
         if (ventaExistente == null)
             return false;
 
-        context.Entry(ventaExistente).CurrentValues.SetValues(ventas);
+
+        ventaExistente.Total = ventas.Total;
+        ventaExistente.Fecha = ventas.Fecha;
 
         var detallesAEliminar = ventaExistente.VentasDetalles
             .Where(detalleDb => !ventas.VentasDetalles.Any(d => d.Id == detalleDb.Id))
             .ToList();
-
         context.VentasDetalle.RemoveRange(detallesAEliminar);
 
         foreach (var detalleActualizado in ventas.VentasDetalles)
@@ -218,26 +221,66 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
 
                 if (detalleExistente != null)
                 {
-                    context.Entry(detalleExistente).CurrentValues.SetValues(detalleActualizado);
+                    detalleExistente.Cantidad = detalleActualizado.Cantidad;
+                    detalleExistente.ProductoId = detalleActualizado.ProductoId;
+                    detalleExistente.PrecioUnitario = detalleActualizado.PrecioUnitario;
 
-                    if (detalleActualizado.Pago != null)
+                    if (detalleExistente.Pago != null && detalleActualizado.Pago != null)
                     {
-                        if (detalleExistente.Pago != null)
-                        {
-                            context.Entry(detalleExistente.Pago).CurrentValues.SetValues(detalleActualizado.Pago);
-                        }
-                        else
-                        {
-                            detalleExistente.Pago = detalleActualizado.Pago;
-                        }
+                        detalleExistente.Pago.CVV = detalleActualizado.Pago.CVV;
+                        detalleExistente.Pago.NumeroTarjeta = detalleActualizado.Pago.NumeroTarjeta;
+                        detalleExistente.Pago.NombreTitular = detalleActualizado.Pago.NombreTitular;
+                        detalleExistente.Pago.FechaExpiracion = detalleActualizado.Pago.FechaExpiracion;
+                        detalleExistente.Pago.Direccion = detalleActualizado.Pago.Direccion;
                     }
                 }
             }
             else
             {
+    
                 ventaExistente.VentasDetalles.Add(detalleActualizado);
             }
         }
+
         return await context.SaveChangesAsync() > 0;
     }
+
+    public bool AgregarProductoDetalleMemoria(Ventas venta, int productoId, double cantidad, List<Productos> productosEnMemoria)
+    {
+        if (venta == null) return false;
+
+        var producto = productosEnMemoria.FirstOrDefault(p => p.ProductoId == productoId);
+        if (producto == null) return false;
+
+        var detalleExistente = venta.VentasDetalles?.FirstOrDefault(d => d.ProductoId == productoId);
+        var cantidadActualEnVenta = detalleExistente?.Cantidad ?? 0;
+
+        if (producto.ProductoCantidad < (cantidadActualEnVenta + cantidad))
+        {
+            return false;
+        }
+
+        if (detalleExistente != null)
+        {
+            detalleExistente.Cantidad += cantidad;
+        }
+        else
+        {
+            var nuevoDetalle = new VentasDetalles
+            {
+                ProductoId = producto.ProductoId,
+                Producto = producto,
+                Cantidad = cantidad,
+                Venta = venta,
+                Pago = new PagoModel()
+            };
+
+            venta.VentasDetalles ??= new List<VentasDetalles>();
+            venta.VentasDetalles.Add(nuevoDetalle);
+        }
+
+        venta.Total = venta.VentasDetalles.Sum(d => d.Cantidad * d.Producto.ProductoMonto);
+        return true;
+    }
+
 }
