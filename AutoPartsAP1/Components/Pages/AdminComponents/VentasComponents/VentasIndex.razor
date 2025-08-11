@@ -98,7 +98,7 @@
                                             <td>@detalle.Producto.ProductoNombre</td>
                                             <td>@detalle.Producto.Categoria</td>
                                             <td class="text-center">@detalle.Cantidad</td>
-                                            <td class="text-end">@(detalle.PrecioUnitario.ToString("C") ?? "0.00")</td>
+                                            <td class="text-end">@(detalle.Producto.ProductoMonto.ToString("C") ?? "0.00")</td>
 
                                             @if (detalle == ventas.VentasDetalles.First())
                                             {
