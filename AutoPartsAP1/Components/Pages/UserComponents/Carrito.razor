@@ -3,9 +3,7 @@
 @inject NavigationManager navigationManager
 @inject Blazored.Toast.Services.IToastService toastService
 @inject VentasService ventasService
-@using System.Globalization
-@using AutoPartsAP1.Components.Models;
-@using Microsoft.AspNetCore.Components.Authorization
+@inject ISnackbar Snackbar
 @rendermode InteractiveServer
 
 <PageTitle>Tu Carrito</PageTitle>
@@ -103,49 +101,51 @@
 
 @if (mostrandoFormularioPago)
 {
-    <div class="card mt-5 shadow-lg border-0 rounded-4">
-        <div class="card-body p-4">
-            <h4 class="card-title text-center fw-bold text-primary mb-4">
-                <i class="bi bi-journal-check me-2"></i>Datos de Pago
-            </h4>
-
-            <EditForm Model="@datosPago">
-                <DataAnnotationsValidator />
-
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Nombre del Titular</label>
-                        <InputText class="form-control" placeholder="Propietario de la tarjeta" @bind-Value="datosPago.NombreTitular" />
-                        <ValidationMessage For="@(() => datosPago.NombreTitular)" class="text-danger" />
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Número de Tarjeta</label>
-                        <InputText class="form-control" placeholder="12 dígitos en adelante" @bind-Value="datosPago.NumeroTarjeta" />
-                        <ValidationMessage For="@(() => datosPago.NumeroTarjeta)" class="text-danger" />
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Fecha de Expiración</label>
-                        <InputText class="form-control" placeholder="MM/AA" @bind-Value="datosPago.FechaExpiracion" />
-                        <ValidationMessage For="@(() => datosPago.FechaExpiracion)" class="text-danger" />
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">CVV</label>
-                        <InputText class="form-control" placeholder="Código trasero de la tarjeta" @bind-Value="datosPago.CVV" />
-                        <ValidationMessage For="@(() => datosPago.CVV)" class="text-danger" />
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Dirección</label>
-                        <InputText class="form-control" placeholder="Dirección del envío" @bind-Value="datosPago.Direccion" />
-                        <ValidationMessage For="@(() => datosPago.Direccion)" class="text-danger" />
-                    </div>
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-4 shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title text-primary fw-bold"><i class="bi bi-journal-check me-2"></i>Datos de Pago</h5>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => mostrandoFormularioPago = false"></button>
                 </div>
-
-                <div class="d-grid mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg fw-bold" @onclick="ConfirmarPago">
-                        <i class="bi bi-check-circle-fill me-2"></i>Confirmar Compra
-                    </button>
+                <div class="modal-body">
+                    <EditForm Model="@datosPago" OnValidSubmit="ConfirmarPago">
+                        <DataAnnotationsValidator />
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Nombre del Titular</label>
+                                <InputText class="form-control" placeholder="Propietario de la tarjeta" @bind-Value="datosPago.NombreTitular" />
+                                <ValidationMessage For="@(() => datosPago.NombreTitular)" class="text-danger" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Número de Tarjeta</label>
+                                <InputText class="form-control" placeholder="12 dígitos en adelante" @bind-Value="datosPago.NumeroTarjeta" />
+                                <ValidationMessage For="@(() => datosPago.NumeroTarjeta)" class="text-danger" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Fecha de Expiración</label>
+                                <InputText class="form-control" placeholder="MM/AA" @bind-Value="datosPago.FechaExpiracion" />
+                                <ValidationMessage For="@(() => datosPago.FechaExpiracion)" class="text-danger" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">CVV</label>
+                                <InputText class="form-control" placeholder="Código trasero de la tarjeta" @bind-Value="datosPago.CVV" />
+                                <ValidationMessage For="@(() => datosPago.CVV)" class="text-danger" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Dirección</label>
+                                <InputText class="form-control" placeholder="Dirección del envío" @bind-Value="datosPago.Direccion" />
+                                <ValidationMessage For="@(() => datosPago.Direccion)" class="text-danger" />
+                            </div>
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold">
+                                <i class="bi bi-check-circle-fill me-2"></i>Confirmar Compra
+                            </button>
+                        </div>
+                    </EditForm>
                 </div>
-            </EditForm>
+            </div>
         </div>
     </div>
 }
