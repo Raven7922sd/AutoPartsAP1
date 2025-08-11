@@ -60,11 +60,9 @@ public class CarritoService
 
         await using var context = await DbFactory.CreateDbContextAsync();
 
-        // Elimina los items actuales del carrito del usuario
         var existingItems = await context.CarritoItems.Where(i => i.ApplicationUserId == _userId).ToListAsync();
         context.CarritoItems.RemoveRange(existingItems);
 
-        // Agrega los nuevos items
         var newItems = _cartItems.Select(item => new Carrito
         {
             ApplicationUserId = _userId,
