@@ -8,9 +8,10 @@
 @attribute [Authorize(Roles = "Admin")]
 
 
-<PageTitle>Ventas Index</PageTitle>
+<PageTitle>Ventas</PageTitle>
+
 <div class="container py-4">
-    <div class="card shadow-sm rounded-4 border-0">
+    <div class="card shadow-lg rounded-4 border-0">
         <div class="card-header bg-primary text-white text-center py-3 rounded-top-4">
             <h4 class="mb-0"><i class="bi bi-cash-coin me-2"></i> Consulta de Ventas</h4>
         </div>
@@ -18,7 +19,6 @@
         <div class="card-body p-4">
             <h5 class="mb-3 text-primary"><i class="bi bi-funnel-fill me-2"></i> Filtros de Búsqueda</h5>
             <div class="row g-3 mb-4">
-
                 <div class="col-md-3">
                     <label class="form-label fw-bold">Filtrar por</label>
                     <InputSelect class="form-select" @bind-Value="Filtro">
@@ -27,10 +27,11 @@
                         <option value="Usuario">Usuario</option>
                         <option value="Producto">Producto</option>
                         <option value="Monto">Total</option>
-                        <option value="Uso General">Categor&iacute;a: "Uso General"</option>
-                        <option value="Motocicletas">Categor&iacute;a: "Motocicletas"</option>
-                        <option value="Autos o Vehículos Ligeros">Categor&iacute;a: "Veh&iacute;culos Ligeros"</option>
-                        <option value="Vehículos Pesados">Categor&iacute;a: "Veh&iacute;culos Pesados"</option>
+                        <option value="Dirección">Direcci&oacute;n</option>
+                        <option value="Uso General">Categoría: "Uso General"</option>
+                        <option value="Motocicletas">Categoría: "Motocicletas"</option>
+                        <option value="Autos o Vehículos Ligeros">Categoría: "Vehículos Ligeros"</option>
+                        <option value="Vehículos Pesados">Categoría: "Vehículos Pesados"</option>
                     </InputSelect>
                 </div>
 
@@ -64,38 +65,61 @@
             <hr class="mb-4">
 
             <div class="table-responsive">
-                <table class="table table-hover table-bordered align-middle">
-                    <thead class="bg-light">
+                <table class="table table-striped table-hover table-bordered align-middle">
+                    <thead class="bg-primary text-white">
                         <tr>
                             <th scope="col">ID Venta</th>
                             <th scope="col">Usuario</th>
                             <th scope="col">Producto</th>
                             <th scope="col">Categoría</th>
                             <th scope="col" class="text-center">Cantidad</th>
-                            <th scope="col" class="text-end">Total</th>
+                            <th scope="col" class="text-end">Precio</th> 
+                            <th scope="col" class="text-end">Direcci&oacute;n</th>
                             <th scope="col">Fecha</th>
                             <th scope="col" class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @if (ResultadoPaginado != null)
+                        @if (ResultadoPaginado != null && ResultadoPaginado.Items != null)
                         {
-                            foreach (var ventas in ResultadoPaginado.Items)
+                            @foreach (var ventas in ResultadoPaginado.Items)
                             {
-                                <tr>
-                                    <td>@ventas.VentaId</td>
-                                    <td>@ventas.Usuario.Email</td>
-                                    <td>@ventas.VentasDetalles?.FirstOrDefault()?.Producto?.ProductoNombre</td>
-                                    <td>@ventas.VentasDetalles?.FirstOrDefault()?.Producto?.Categoria</td>
-                                    <td class="text-center">@ventas.VentasDetalles?.FirstOrDefault()?.Cantidad</td>
-                                    <td class="text-end">@(ventas.Total.ToString("C") ?? "0.00")</td>
-                                    <td>@ventas.Fecha.ToString("dd/MM/yyyy")</td>
-                                    <td class="text-center">
-                                        <a href="Ventas/Edit/@ventas.VentaId" class="btn btn-outline-primary btn-sm" title="Editar">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                    </td>
-                                </tr>
+                                @if (ventas.VentasDetalles != null && ventas.VentasDetalles.Any())
+                                {
+                                    @foreach (var detalle in ventas.VentasDetalles)
+                                    {
+                                        <tr>
+                                            @if (detalle == ventas.VentasDetalles.First())
+                                            {
+                                                <td rowspan="@ventas.VentasDetalles.Count()">@ventas.VentaId</td>
+                                                <td rowspan="@ventas.VentasDetalles.Count()">@ventas.Usuario.Email</td>
+                                            }
+
+                                            <td>@detalle.Producto.ProductoNombre</td>
+                                            <td>@detalle.Producto.Categoria</td>
+                                            <td class="text-center">@detalle.Cantidad</td>
+                                            <td class="text-end">@(detalle.PrecioUnitario.ToString("C") ?? "0.00")</td>
+
+                                            @if (detalle == ventas.VentasDetalles.First())
+                                            {
+                                                <td rowspan="@ventas.VentasDetalles.Count()">
+                                                    @(ventas.VentasDetalles.FirstOrDefault()?.Pago?.Direccion ?? "N/A")
+                                                </td>
+                                                <td rowspan="@ventas.VentasDetalles.Count()">@ventas.Fecha.ToString("dd/MM/yyyy")</td>
+                                                <td rowspan="@ventas.VentasDetalles.Count()" class="text-center">
+                                                    <a href="Ventas/Edit/@ventas.VentaId" class="btn btn-outline-primary btn-sm" title="Editar">
+                                                        <i class="bi bi-pencil-square"></i>
+                                                    </a>
+                                                </td>
+                                            }
+                                        </tr>
+                                    }
+                                    <tr class="table-primary">
+                                        <td colspan="5" class="text-end fw-bold">Total Venta:</td>
+                                        <td class="text-end fw-bold">@(ventas.Total.ToString("C") ?? "0.00")</td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                }
                             }
                         }
                     </tbody>
@@ -126,6 +150,7 @@
         </div>
     </div>
 </div>
+
 @code {
 	private PaginacionResultado<Ventas> ResultadoPaginado { get; set; }
 	private int PaginaActual { get; set; } = 1;

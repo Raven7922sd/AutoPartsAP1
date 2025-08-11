@@ -128,4 +128,13 @@ public class ServiciosService(IDbContextFactory<ApplicationDbContext> DbFactory)
         return await context.SaveChangesAsync() > 0;
     }
 
+    public double CalcularGananciaServicio(Servicios servicio)
+    {
+        return servicio.Precio * servicio.Solicitados;
+    }
+
+    public double CalcularTotalGanancia(List<Servicios> listaServicios)
+    {
+        return listaServicios.Sum(s => CalcularGananciaServicio(s));
+    }
 }

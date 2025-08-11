@@ -72,8 +72,9 @@
 									<tr>
 										<th>Producto</th>
 										<th>Cantidad</th>
-										<th>Total</th>
+										<th>Precio Unitario</th>
 										<th>Dirección</th>
+										<th>Usuario</th>
 										<th>Remover</th>
 									</tr>
 								</thead>
@@ -86,9 +87,7 @@
 												<td>@detalle.Producto?.ProductoNombre</td>
 												<td>@detalle.Cantidad</td>
 												<td>@(((detalle.Producto?.ProductoMonto ?? 0) * detalle.Cantidad).ToString("C"))</td>
-												<td>
-													<InputText class="form-control" @bind-Value="detalle.Pago.Direccion" />
-												</td>
+
 												<td>
 													<button type="button" class="btn btn-outline-danger btn-sm" @onclick="@(() => RemoverProductoDetalle(detalle))">
 														<i class="bi bi-trash"></i>
@@ -181,7 +180,8 @@
 
 		if (VentaId > 0)
 		{
-			var VentaEncontrada = await ventasService.BuscarVentas(VentaId);
+			// ---- Se ha cambiado esta línea para usar el nuevo método de servicio ----
+			var VentaEncontrada = await ventasService.ObtenerVentaConDetallesYPago(VentaId);
 			if (VentaEncontrada != null)
 			{
 				venta = VentaEncontrada;
@@ -217,52 +217,15 @@
 
 	private async Task ActualizarVenta()
 	{
+		// Paso 1: Verificación inicial.
+		// Si la lista de detalles está vacía, se muestra una advertencia.
 		if (venta.VentasDetalles == null || !venta.VentasDetalles.Any())
 		{
 			toastService.ShowWarning("Debe agregar al menos un producto.");
 			return;
 		}
 
-		foreach (var detalle in venta.VentasDetalles)
-		{
-			var original = detallesOriginales.FirstOrDefault(o => o.ProductoId == detalle.ProductoId);
-
-			if (original == null)
-			{
-				var restado = await productoService.RestarExistenciaProductoAsync(detalle.ProductoId, (int)detalle.Cantidad);
-				if (!restado)
-				{
-					toastService.ShowError($"Stock insuficiente para el producto '{detalle.Producto?.ProductoNombre}'");
-					return;
-				}
-				continue; 
-			}
-
-			int diferencia = (int)(detalle.Cantidad - original.Cantidad);
-
-			if (diferencia > 0)
-			{
-				var restado = await productoService.RestarExistenciaProductoAsync(detalle.ProductoId, diferencia);
-				if (!restado)
-				{
-					toastService.ShowError($"No hay suficiente stock para el producto '{detalle.Producto?.ProductoNombre}'");
-					return;
-				}
-			}
-			else if (diferencia < 0)
-			{
-				await productoService.RestaurarExistenciaProductoAsync(detalle.ProductoId, Math.Abs(diferencia));
-			}
-		}
-
-		foreach (var original in detallesOriginales)
-		{
-			if (!venta.VentasDetalles.Any(d => d.ProductoId == original.ProductoId))
-			{
-				await productoService.RestaurarExistenciaProductoAsync(original.ProductoId, (int)original.Cantidad);
-			}
-		}
-
+		// El servicio ahora maneja toda la lógica de stock.
 		var actualizado = await ventasService.Modificar(venta);
 
 		if (actualizado)
@@ -287,13 +250,20 @@
 			return;
 		}
 
-		bool agregado = await productoService.AgregarProductoDetalle(venta, SelectedProductoId, CantidadDetalle);
+		bool agregado = await ventasService.AgregarProductoDetalle(venta, SelectedProductoId, CantidadDetalle);
 
 		if (agregado)
 		{
-			var nuevo = venta.VentasDetalles.Last();
-			if (nuevo.Pago == null)
-				nuevo.Pago = new PagoModel();
+			// Obtener el detalle que acaba de ser agregado.
+			var nuevoDetalle = venta.VentasDetalles
+				.FirstOrDefault(d => d.ProductoId == SelectedProductoId);
+
+			// ---- ¡NUEVA LÍNEA AÑADIDA AQUÍ! ----
+			// Asegurarse de que el objeto Pago no sea null.
+			if (nuevoDetalle != null && nuevoDetalle.Pago == null)
+			{
+				nuevoDetalle.Pago = new PagoModel();
+			}
 
 			toastService.ShowSuccess("Producto agregado correctamente.");
 		}
@@ -306,7 +276,6 @@
 		CantidadDetalle = 0;
 		StateHasChanged();
 	}
-
 	private void RemoverProductoDetalle(VentasDetalles detalleToRemove)
 	{
 		SelectedProductoId = detalleToRemove.ProductoId;
