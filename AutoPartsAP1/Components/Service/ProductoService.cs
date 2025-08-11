@@ -119,10 +119,10 @@ public class ProductoService(IDbContextFactory<ApplicationDbContext>DbFactory)
 
         await using var context = await DbFactory.CreateDbContextAsync();
 
-        var totalRegistros = await context.Producto.CountAsync(filtro); // 👈 plural
+        var totalRegistros = await context.Producto.CountAsync(filtro);
         var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)tamanioPagina);
 
-        var productos = await context.Producto // 👈 plural
+        var productos = await context.Producto 
             .Where(filtro)
             .OrderBy(p => p.Fecha)
             .Skip((pagina - 1) * tamanioPagina)
