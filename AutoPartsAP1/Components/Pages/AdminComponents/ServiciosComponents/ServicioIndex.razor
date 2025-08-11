@@ -1,4 +1,7 @@
 ﻿@page "/Servicios/Index"
+@using AutoPartsAP1.Components.Models
+@using Microsoft.EntityFrameworkCore
+@using System.Globalization
 @inject ServiciosService serviciosService
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
@@ -29,6 +32,7 @@
                         <option value="" disabled selected>Seleccione una opción</option>
                         <option value="ServicioId">Id</option>
                         <option value="Nombre">Nombre</option>
+                        <option value="Descripción">Descripción</option>
                         <option value="Monto">Monto</option>
                     </InputSelect>
                 </div>
@@ -71,22 +75,26 @@
                             <th scope="col">Descripción</th>
                             <th scope="col" class="text-end">Monto</th>
                             <th scope="col" class="text-center">Veces Solicitado</th>
+                            <th scope="col" class="text-end">Ganancia por Servicio</th>
                             <th scope="col">Fecha</th>
                             <th scope="col" class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var servicios in ListaServicios)
+                        @foreach (var servicio in ListaServicios)
                         {
                             <tr>
-                                <td>@servicios.ServicioId</td>
-                                <td>@servicios.Nombre</td>
-                                <td>@servicios.Descripcion</td>
-                                <td class="text-end">@servicios.Precio.ToString("C")</td>
-                                <td class="text-center">@servicios.Solicitados</td>
-                                <td>@servicios.FechaServicio.ToString("dd/MM/yyyy")</td>
+                                <td>@servicio.ServicioId</td>
+                                <td>@servicio.Nombre</td>
+                                <td>@servicio.Descripcion</td>
+                                <td class="text-end">@servicio.Precio.ToString("C")</td>
+                                <td class="text-center">@servicio.Solicitados</td>
+                                <td class="text-end">
+                                    @((servicio.Precio * servicio.Solicitados).ToString("C"))
+                                </td>
+                                <td>@servicio.FechaServicio.ToString("dd/MM/yyyy")</td>
                                 <td class="text-center">
-                                    <a href="/Servicios/Edit/@servicios.ServicioId" class="btn btn-outline-primary btn-sm" title="Editar">
+                                    <a href="/Servicios/Edit/@servicio.ServicioId" class="btn btn-outline-primary btn-sm" title="Editar">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
                                 </td>
@@ -99,12 +107,12 @@
             <div class="d-flex justify-content-end align-items-center mt-4 pt-3 border-top">
                 <div class="d-flex gap-4">
                     <div class="d-flex align-items-center">
-                        <strong class="me-2">Conteo:</strong>
-                        <span class="badge bg-secondary fs-6">@ListaServicios.Count</span>
+                        <strong class="me-2">Solicitudes Totales:</strong>
+                        <span class="badge bg-secondary fs-6">@ListaServicios.Sum(m => m.Solicitados)</span>
                     </div>
                     <div class="d-flex align-items-center">
-                        <strong class="me-2">Total:</strong>
-                        <span class="badge bg-primary fs-6">@ListaServicios.Sum(m => m.Precio).ToString("C")</span>
+                        <strong class="me-2">Ganancias Totales:</strong>
+                        <span class="badge bg-primary fs-6">@totalGanancia.ToString("C")</span>
                     </div>
                 </div>
             </div>
@@ -113,42 +121,44 @@
 </div>
 
 @code {
-	public List<Servicios> ListaServicios { get; set; } = new List<Servicios>();
-	public string Filtro { get; set; } = string.Empty;
-	public string ValorFiltro { get; set; } = string.Empty;
-	public DateTime? FechaDesde { get; set; }
-	public DateTime? FechaHasta { get; set; }
-	private CancellationTokenSource? _cts;
+    public List<Servicios> ListaServicios { get; set; } = new List<Servicios>();
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+    public DateTime? FechaDesde { get; set; }
+    public DateTime? FechaHasta { get; set; }
+    private CancellationTokenSource? _cts;
+    private double totalGanancia;
 
-	protected override async Task OnInitializedAsync()
-	{
-		ListaServicios = await serviciosService.Listar(a => a.ServicioId > 0);
-		FechaDesde = null;
-		FechaHasta = null;
-	}
+    protected override async Task OnInitializedAsync()
+    {
+        await Buscar();
+        FechaDesde = null;
+        FechaHasta = null;
+    }
 
-	public async Task Buscar()
-	{
-		DateTime? fechaHastaAjustada = FechaHasta?.Date.AddDays(1).AddTicks(-1);
-		ListaServicios = await serviciosService.BuscarFiltradosAsync(Filtro, ValorFiltro, FechaDesde, fechaHastaAjustada);
-	}
+    public async Task Buscar()
+    {
+        DateTime? fechaHastaAjustada = FechaHasta?.Date.AddDays(1).AddTicks(-1);
+        ListaServicios = await serviciosService.BuscarFiltradosAsync(Filtro, ValorFiltro, FechaDesde, fechaHastaAjustada);
+        totalGanancia = serviciosService.CalcularTotalGanancia(ListaServicios);
+    }
 
-	private async Task FiltroCambiado(ChangeEventArgs e)
-	{
-		ValorFiltro = e.Value?.ToString() ?? string.Empty;
+    private async Task FiltroCambiado(ChangeEventArgs e)
+    {
+        ValorFiltro = e.Value?.ToString() ?? string.Empty;
 
-		_cts?.Cancel();
-		_cts = new CancellationTokenSource();
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
 
-		try
-		{
-			await Task.Delay(400, _cts.Token);
+        try
+        {
+            await Task.Delay(400, _cts.Token);
 
-			await Buscar();
-			StateHasChanged();
-		}
-		catch (TaskCanceledException)
-		{
-		}
-	}
+            await Buscar();
+            StateHasChanged();
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
 }

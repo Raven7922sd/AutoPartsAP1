@@ -1,6 +1,7 @@
 ﻿using AutoPartsAP1.Components.Extensions;
 using AutoPartsAP1.Components.Models;
 using AutoPartsAP1.Components.Models.Paginacion;
+using AutoPartsAP1.Components.Services;
 using AutoPartsAP1.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -25,19 +26,46 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
 
     public async Task<bool> Insertar(Ventas ventas)
     {
-        using var context = await DbFactory.CreateDbContextAsync();
-        context.Ventas.Add(ventas);
+        await using var context = await DbFactory.CreateDbContextAsync();
+        await using var transaction = await context.Database.BeginTransactionAsync();
 
-        foreach (var detalle in ventas.VentasDetalles)
+        try
         {
-            var producto = await context.Producto.FindAsync(detalle.ProductoId);
-            if (producto != null)
-            {
-                producto.ProductoCantidad -= detalle.Cantidad;
-            }
-        }
+            context.Ventas.Add(ventas);
 
-        return await context.SaveChangesAsync() > 0;
+            foreach (var detalle in ventas.VentasDetalles)
+            {
+                var producto = await context.Producto.FindAsync(detalle.ProductoId);
+                if (producto != null)
+                {
+
+                    if (producto.ProductoCantidad < detalle.Cantidad)
+                    {
+
+                        await transaction.RollbackAsync();
+                        return false;
+                    }
+
+                    producto.ProductoCantidad -= detalle.Cantidad;
+                }
+                else
+                {
+                    await transaction.RollbackAsync();
+                    return false;
+                }
+            }
+
+            var cambios = await context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            return cambios > 0;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            return false;
+        }
     }
 
     public async Task<Ventas?> BuscarVentas(int Ventaid)
@@ -91,45 +119,34 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
         }
     }
 
-    public async Task<List<Ventas>> ListarVentas(Expression<Func<Ventas, bool>> criterio)
-    {
-        await using var contexto = await DbFactory.CreateDbContextAsync();
-        return await contexto.Ventas
-            .Where(criterio)
-            .Include(v => v.Usuario)
-            .Include(v => v.VentasDetalles)
-                .ThenInclude(d => d.Producto)
-            .AsNoTracking()
-            .ToListAsync();
-    }
-
-    public async Task<List<Ventas>> ObtenerVentasPorUsuario(string userId)
-    {
-        await using var contexto = await DbFactory.CreateDbContextAsync();
-        return await contexto.Ventas
-            .Include(v => v.VentasDetalles)
-            .ThenInclude(d => d.Producto)
-            .Where(v => v.ApplicationUserId == userId)
-            .OrderByDescending(v => v.Fecha)
-            .ToListAsync();
-    }
-
     public async Task<PaginacionResultado<Ventas>> BuscarVentasAsync(
-        string filtroCampo,
-        string valorFiltro,
-        DateTime? fechaDesde,
-        DateTime? fechaHasta,
-        int pagina,
-        int tamanioPagina)
+     string filtroCampo,
+     string valorFiltro,
+     DateTime? fechaDesde,
+     DateTime? fechaHasta,
+     int pagina,
+     int tamanioPagina)
     {
         Expression<Func<Ventas, bool>> filtro = t => true;
 
         if (filtroCampo == "VentaId" && int.TryParse(valorFiltro, out var ventaid))
             filtro = filtro.AndAlso(t => t.VentaId == ventaid);
-        else if (filtroCampo == "UsuarioNombre")
-            filtro = filtro.AndAlso(t => t.Usuario != null && t.Usuario.UserName.ToLower().Contains(valorFiltro.ToLower()));
-        else if (filtroCampo == "ProductoNombre")
-            filtro = filtro.AndAlso(t => t.VentasDetalles.Any(d => d.Producto.ProductoNombre.ToLower().Contains(valorFiltro.ToLower())));
+        else if (filtroCampo == "Usuario")
+            filtro = filtro.AndAlso(t => t.Usuario != null &&
+                                         t.Usuario.Email.ToLower().Contains(valorFiltro.ToLower()));
+        else if (filtroCampo == "Producto")
+            filtro = filtro.AndAlso(t => t.VentasDetalles
+                                         .Any(d => d.Producto.ProductoNombre.ToLower().Contains(valorFiltro.ToLower())));
+        else if (filtroCampo == "Monto" && double.TryParse(valorFiltro, out var monto))
+            filtro = filtro.AndAlso(m => m.VentasDetalles.FirstOrDefault().Venta.Total == monto);
+        else if (filtroCampo == "Dirección")
+            filtro = filtro.AndAlso(t => t.VentasDetalles
+                                         .Any(d => d.Pago.Direccion.ToLower().Contains(valorFiltro.ToLower())));
+        if (filtroCampo is "Uso General" or "Motocicletas" or "Autos o Vehículos Ligeros" or "Vehículos Pesados")
+        {
+            filtro = filtro.AndAlso(t => t.VentasDetalles
+                                         .Any(d => d.Producto.Categoria.ToLower() == filtroCampo.ToLower()));
+        }
 
         if (fechaDesde.HasValue)
             filtro = filtro.AndAlso(t => t.Fecha >= fechaDesde.Value);
@@ -145,6 +162,8 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
             .Include(v => v.Usuario)
             .Include(v => v.VentasDetalles)
                 .ThenInclude(d => d.Producto)
+            .Include(v=>v.VentasDetalles)
+                .ThenInclude(v=>v.Pago)
             .Where(filtro)
             .OrderBy(v => v.VentaId)
             .Skip((pagina - 1) * tamanioPagina)
@@ -159,6 +178,7 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
             TotalPaginas = totalPaginas
         };
     }
+
     public async Task<PagoModel?> GuardarPago(PagoModel pago)
     {
         await using var context = await DbFactory.CreateDbContextAsync();
@@ -170,83 +190,97 @@ public class VentasService(IDbContextFactory<ApplicationDbContext> DbFactory)
 
     public async Task<bool> Modificar(Ventas ventas)
     {
+        if (ventas.VentasDetalles == null)
+            ventas.VentasDetalles = new List<VentasDetalles>();
+
         using var context = await DbFactory.CreateDbContextAsync();
 
         var ventaExistente = await context.Ventas
             .Include(v => v.VentasDetalles)
-                .ThenInclude(d => d.Pago)
+            .ThenInclude(d => d.Pago)
             .FirstOrDefaultAsync(v => v.VentaId == ventas.VentaId);
 
         if (ventaExistente == null)
             return false;
 
-        context.Entry(ventaExistente).CurrentValues.SetValues(ventas);
 
-        foreach (var detalle in ventas.VentasDetalles)
+        ventaExistente.Total = ventas.Total;
+        ventaExistente.Fecha = ventas.Fecha;
+
+        var detallesAEliminar = ventaExistente.VentasDetalles
+            .Where(detalleDb => !ventas.VentasDetalles.Any(d => d.Id == detalleDb.Id))
+            .ToList();
+        context.VentasDetalle.RemoveRange(detallesAEliminar);
+
+        foreach (var detalleActualizado in ventas.VentasDetalles)
         {
-            var detalleExistente = ventaExistente.VentasDetalles
-                .FirstOrDefault(d => d.Id == detalle.Id);
-
-            if (detalleExistente != null)
+            if (detalleActualizado.Id > 0)
             {
-                context.Entry(detalleExistente).CurrentValues.SetValues(detalle);
+                var detalleExistente = ventaExistente.VentasDetalles
+                    .FirstOrDefault(d => d.Id == detalleActualizado.Id);
 
-                if (detalle.Pago != null)
+                if (detalleExistente != null)
                 {
-                    if (detalleExistente.Pago != null)
+                    detalleExistente.Cantidad = detalleActualizado.Cantidad;
+                    detalleExistente.ProductoId = detalleActualizado.ProductoId;
+                    detalleExistente.PrecioUnitario = detalleActualizado.PrecioUnitario;
+
+                    if (detalleExistente.Pago != null && detalleActualizado.Pago != null)
                     {
-                        context.Entry(detalleExistente.Pago).CurrentValues.SetValues(detalle.Pago);
-                    }
-                    else
-                    {
-                        detalleExistente.Pago = detalle.Pago;
+                        detalleExistente.Pago.CVV = detalleActualizado.Pago.CVV;
+                        detalleExistente.Pago.NumeroTarjeta = detalleActualizado.Pago.NumeroTarjeta;
+                        detalleExistente.Pago.NombreTitular = detalleActualizado.Pago.NombreTitular;
+                        detalleExistente.Pago.FechaExpiracion = detalleActualizado.Pago.FechaExpiracion;
+                        detalleExistente.Pago.Direccion = detalleActualizado.Pago.Direccion;
                     }
                 }
             }
             else
             {
-                ventaExistente.VentasDetalles.Add(detalle);
-            }
-        }
-
-        foreach (var detalleDb in ventaExistente.VentasDetalles.ToList())
-        {
-            if (!ventas.VentasDetalles.Any(d => d.Id == detalleDb.Id))
-            {
-                context.VentasDetalle.Remove(detalleDb);
+    
+                ventaExistente.VentasDetalles.Add(detalleActualizado);
             }
         }
 
         return await context.SaveChangesAsync() > 0;
     }
 
-    public async Task<bool> InsertarVentaServiciosAsync(Ventas venta, List<Servicios> servicios)
+    public bool AgregarProductoDetalleMemoria(Ventas venta, int productoId, double cantidad, List<Productos> productosEnMemoria)
     {
-        await using var context = await DbFactory.CreateDbContextAsync();
-        await using var transaction = await context.Database.BeginTransactionAsync();
+        if (venta == null) return false;
 
-        try
+        var producto = productosEnMemoria.FirstOrDefault(p => p.ProductoId == productoId);
+        if (producto == null) return false;
+
+        var detalleExistente = venta.VentasDetalles?.FirstOrDefault(d => d.ProductoId == productoId);
+        var cantidadActualEnVenta = detalleExistente?.Cantidad ?? 0;
+
+        if (producto.ProductoCantidad < (cantidadActualEnVenta + cantidad))
         {
-            context.Ventas.Add(venta);
-            await context.SaveChangesAsync();
-
-            foreach (var servicio in servicios)
-            {
-                var servicioDb = await context.Servicio.FirstOrDefaultAsync(s => s.ServicioId == servicio.ServicioId);
-                if (servicioDb is not null)
-                {
-                    servicioDb.Solicitados += 1;
-                }
-            }
-
-            await context.SaveChangesAsync();
-            await transaction.CommitAsync();
-            return true;
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
             return false;
         }
+
+        if (detalleExistente != null)
+        {
+            detalleExistente.Cantidad += cantidad;
+        }
+        else
+        {
+            var nuevoDetalle = new VentasDetalles
+            {
+                ProductoId = producto.ProductoId,
+                Producto = producto,
+                Cantidad = cantidad,
+                Venta = venta,
+                Pago = new PagoModel()
+            };
+
+            venta.VentasDetalles ??= new List<VentasDetalles>();
+            venta.VentasDetalles.Add(nuevoDetalle);
+        }
+
+        venta.Total = venta.VentasDetalles.Sum(d => d.Cantidad * d.Producto.ProductoMonto);
+        return true;
     }
+
 }

@@ -66,36 +66,30 @@
 				@foreach (var producto in ListaProductos)
 				{
 					<div class="col">
-						
-						<div class="card card-elegant h-100 shadow-sm">
-							<a href="/Productos/Detalles/@producto.ProductoId" class="text-decoration-none">
-							<div class="position-relative">
-								<img src="@(producto.ProductoImagenUrl ?? "https://placehold.co/600x400/dee2e6/6c757d?text=Imagen+No+Disponible")"
-									 class="card-img-top"
-									 alt="@producto.ProductoNombre" />
-
-								<span class="badge @(producto.ProductoCantidad > 5 ? "bg-success" : "bg-danger") position-absolute top-0 end-0 m-3 shadow">
-									@(producto.ProductoCantidad > 0 ? $"Stock: {producto.ProductoCantidad}" : "Agotado")
-								</span>
-							</div>
-
-							<div class="card-body text-center d-flex flex-column">
-								<h5 class="card-title text-dark">@producto.ProductoNombre</h5>
-
-								<span class="badge bg-primary mb-3">@producto.Categoria</span>
-
-								<p class="price mb-2">
-									RD$@producto.ProductoMonto.ToString("N2", CultureInfo.GetCultureInfo("es-DO"))
-								</p>
-
-								<p class="text-muted flex-grow-1">
-									@(producto.ProductoDescripcion?.Length > 80
-																? producto.ProductoDescripcion.Substring(0, 80) + "..."
-																: producto.ProductoDescripcion)
-								</p>
-							</div>
-						</a>
-							<div class="card-footer bg-white border-0 text-center pb-4">
+						<div class="card h-100 shadow-sm d-flex flex-column">
+							<a href="/Productos/Detalles/@producto.ProductoId" class="text-decoration-none d-flex flex-column h-100">
+								<div class="position-relative">
+									<img src="@(producto.ProductoImagenUrl ?? "https://placehold.co/600x400/dee2e6/6c757d?text=Imagen+No+Disponible")"
+										 class="card-img-top"
+										 alt="@producto.ProductoNombre" />
+									<span class="badge @(producto.ProductoCantidad > 5 ? "bg-success" : "bg-danger") position-absolute top-0 end-0 m-3 shadow">
+										@(producto.ProductoCantidad > 0 ? $"Stock: {producto.ProductoCantidad}" : "Agotado")
+									</span>
+								</div>
+								<div class="card-body text-center d-flex flex-column">
+									<h5 class="card-title text-dark">@producto.ProductoNombre</h5>
+									<span class="badge bg-primary mb-3">@producto.Categoria</span>
+									<p class="price mb-2">
+										RD$@producto.ProductoMonto.ToString("N2", CultureInfo.GetCultureInfo("es-DO"))
+									</p>
+									<p class="text-muted flex-grow-1">
+										@(producto.ProductoDescripcion?.Length > 80
+																	? producto.ProductoDescripcion.Substring(0, 80) + "..."
+																	: producto.ProductoDescripcion)
+									</p>
+								</div>
+							</a>
+							<div class="card-footer bg-white border-0 text-center pb-4 mt-auto">
 								<button class="btn btn-outline-primary w-100 fw-semibold"
 										@onclick="() => AñadirCarrito(producto)"
 										disabled="@(producto.ProductoCantidad <= 0)">
@@ -103,7 +97,6 @@
 								</button>
 							</div>
 						</div>
-						
 					</div>
 				}
 			}
@@ -119,7 +112,7 @@
 
 		<div class="row g-4 mt-3">
 			<div class="col-md-6 col-lg-3">
-				<a href="/agendar-servicio" class="text-decoration-none">
+				<a href="/servicios/detalles" class="text-decoration-none">
 					<div class="card h-100 border-0 shadow-sm transition-transform hover-shadow">
 						<div class="card-body">
 							<i class="bi bi-droplet-half display-4 text-primary mb-3"></i>
@@ -130,7 +123,7 @@
 				</a>
 			</div>
 			<div class="col-md-6 col-lg-3">
-				<a href="/agendar-servicio" class="text-decoration-none">
+				<a href="/servicios/detalles" class="text-decoration-none">
 					<div class="card h-100 border-0 shadow-sm transition-transform hover-shadow">
 						<div class="card-body">
 							<i class="bi bi-tools display-4 text-primary mb-3"></i>
@@ -141,7 +134,7 @@
 				</a>
 			</div>
 			<div class="col-md-6 col-lg-3">
-				<a href="/agendar-servicio" class="text-decoration-none">
+				<a href="/servicios/detalles" class="text-decoration-none">
 					<div class="card h-100 border-0 shadow-sm transition-transform hover-shadow">
 						<div class="card-body">
 							<i class="bi bi-circle-half display-4 text-primary mb-3"></i>
@@ -152,7 +145,7 @@
 				</a>
 			</div>
 			<div class="col-md-6 col-lg-3">
-				<a href="/agendar-servicio" class="text-decoration-none">
+				<a href="/servicios/detalles" class="text-decoration-none">
 					<div class="card h-100 border-0 shadow-sm transition-transform hover-shadow">
 						<div class="card-body">
 							<i class="bi bi-droplet-fill display-4 text-primary mb-3"></i>
@@ -164,8 +157,8 @@
 			</div>
 		</div>
 
-		<a href="/agendar-servicio" class="btn btn-primary btn-lg mt-5 fw-semibold shadow">
-			Solicitar Servicio
+		<a href="/servicios/detalles" class="btn btn-primary btn-lg mt-5 fw-semibold shadow">
+			Ver catágolo de servicios
 		</a>
 	</div>
 </section>

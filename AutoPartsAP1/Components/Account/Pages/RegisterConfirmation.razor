@@ -10,23 +10,45 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Register confirmation</PageTitle>
+<PageTitle>Confirmación de Registro</PageTitle>
 
-<h1>Register confirmation</h1>
-
-<StatusMessage Message="@statusMessage" />
-
-@if (emailConfirmationLink is not null)
-{
-    <p>
-        This app does not currently have a real email sender registered, see <a href="https://aka.ms/aspaccountconf">these docs</a> for how to configure a real email sender.
-        Normally this would be emailed: <a href="@emailConfirmationLink">Click here to confirm your account</a>
-    </p>
-}
-else
-{
-    <p role="alert">Please check your email to confirm your account.</p>
-}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 rounded-4 p-4 p-md-5">
+                <div class="card-body text-center">
+                    @if (!string.IsNullOrEmpty(statusMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">@statusMessage</div>
+                    }
+                    else if (emailConfirmationLink is not null)
+                    {
+                        <i class="bi bi-envelope-fill text-primary display-1 mb-4"></i>
+                        <h2 class="card-title fw-bold mb-3">¡Registro exitoso!</h2>
+                        <p class="lead text-muted mb-4">
+                            Se ha enviado un correo electrónico a tu dirección para confirmar la cuenta. Por favor, revisa tu bandeja de entrada.
+                        </p>
+                        
+                        <a href="@emailConfirmationLink" class="btn btn-outline-primary mt-3 fw-bold">
+                            <i class="bi bi-link-45deg me-2"></i>Confirmar cuenta manualmente
+                        </a>
+                    }
+                    else
+                    {
+                        <i class="bi bi-check-circle-fill text-success display-1 mb-4"></i>
+                        <h2 class="card-title fw-bold mb-3">¡Confirmación enviada!</h2>
+                        <p class="lead text-muted" role="alert">
+                            Por favor, revisa tu correo electrónico para confirmar tu cuenta y continuar.
+                        </p>
+                        <a href="/" class="btn btn-primary mt-4 fw-bold">
+                            <i class="bi bi-house-fill me-2"></i>Ir a la página principal
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code {
     private string? emailConfirmationLink;
@@ -52,11 +74,10 @@ else
         if (user is null)
         {
             HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
-            statusMessage = "Error finding user for unspecified email";
+            statusMessage = "Error al encontrar el usuario con el correo especificado.";
         }
         else if (EmailSender is IdentityNoOpEmailSender)
         {
-            // Once you add a real email sender, you should remove this code that lets you confirm the account
             var userId = await UserManager.GetUserIdAsync(user);
             var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));

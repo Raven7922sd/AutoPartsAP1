@@ -14,7 +14,7 @@ namespace AutoPartsAP1.Data
         public DbSet<PagoModel> Pago { get; set; }
         public DbSet<Servicios> Servicio { get; set; }
         public DbSet<Cita> Citas { get; set; }
-
+        public DbSet<Carrito> CarritoItems { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -44,6 +44,7 @@ namespace AutoPartsAP1.Data
                 .WithMany()
                 .HasForeignKey(d => d.PagoId)
                 .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

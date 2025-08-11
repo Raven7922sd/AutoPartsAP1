@@ -10,123 +10,194 @@
 
 <PageTitle>Editar Venta</PageTitle>
 
-<EditForm Model="@venta" OnValidSubmit="ActualizarVenta" FormName="VentasEdit">
-	<DataAnnotationsValidator />
-	<div class="container py-4">
-		<div class="text-center mb-4">
-			<h2 class="fw-bold text-primary">
-				<i class="bi bi-receipt me-2"></i> Editar Venta
-			</h2>
-			<p class="text-muted">Actualiza los detalles de la venta y los productos asociados.</p>
+
+@if (venta == null || ProductosDisponibles == null)
+{
+	<div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+		<div class="spinner-border text-primary" role="status">
+			<span class="visually-hidden">Cargando...</span>
 		</div>
+	</div>
+}
+else
+{
+	<EditForm Model="@venta" OnValidSubmit="ActualizarVenta" FormName="VentasEdit">
+		<DataAnnotationsValidator />
+		<div class="container py-4">
+			<div class="text-center mb-5">
+				<h2 class="fw-bold text-primary">
+					<i class="bi bi-receipt me-2"></i> Editar Venta
+				</h2>
+				<p class="text-muted">
+					Actualiza la información general, los productos y los datos de pago de esta venta.
+				</p>
+			</div>
 
-		<div class="card shadow-sm rounded-4 border-0">
-			<div class="card-body p-4">
-				<div class="row g-4">
-					<div class="col-md-4">
-						<h5 class="mb-3 text-secondary">
-							<i class="bi bi-info-circle me-2"></i> Información General
-						</h5>
-						<div class="mb-3">
-							<label class="form-label fw-bold">ID de la Venta</label>
-							<InputNumber class="form-control" @bind-Value="venta.VentaId" readonly />
-						</div>
-						<div class="mb-3">
-							<label class="form-label fw-bold">Fecha</label>
-							<InputDate class="form-control" @bind-Value="venta.Fecha" />
-						</div>
-					</div>
+			<div class="card shadow-lg rounded-4 border-0 mb-4">
+				<div class="card-body p-4 p-md-5">
+					<div class="row g-5">
 
-					<div class="col-md-8">
-						<h5 class="mb-3 text-secondary">
-							<i class="bi bi-cart me-2"></i> Productos Vendidos
-						</h5>
-
-						<div class="card p-3 mb-4 rounded-3 border-success border-2">
-							<div class="row g-2 align-items-end">
-								<div class="col-sm-5">
-									<label class="form-label fw-bold mb-0">Producto</label>
-									<InputSelect class="form-select" @bind-Value="SelectedProductoId">
-										<option value="0" disabled>Seleccione un producto</option>
-										@foreach (var producto in ProductosDisponibles)
-										{
-											<option value="@producto.ProductoId">@producto.ProductoNombre</option>
-										}
-									</InputSelect>
-								</div>
-								<div class="col-sm-4">
-									<label class="form-label fw-bold mb-0">Cantidad</label>
-									<InputNumber class="form-control" @bind-Value="CantidadDetalle" />
-								</div>
-								<div class="col-sm-3">
-									<button type="button" class="btn btn-success w-100 d-flex align-items-center justify-content-center" @onclick="AgregarProductoDetalleService">
-										<i class="bi bi-plus-lg me-2"></i> Agregar
-									</button>
+				
+						<div class="col-md-4">
+							<h5 class="mb-3 text-secondary border-bottom pb-2">
+								<i class="bi bi-info-circle-fill me-2"></i> Detalles de la Venta
+							</h5>
+							<div class="mb-4">
+								<label class="form-label fw-bold">ID de la Venta</label>
+								<InputNumber class="form-control" @bind-Value="venta.VentaId" readonly />
+							</div>
+							<div class="mb-4">
+								<label class="form-label fw-bold">Fecha de Venta</label>
+								<InputDate class="form-control" @bind-Value="venta.Fecha" />
+							</div>
+							<div class="mb-4">
+								<label class="form-label fw-bold">Total de la Venta</label>
+								<div class="input-group">
+									<span class="input-group-text">$</span>
+									<InputNumber class="form-control" @bind-Value="venta.Total" readonly />
 								</div>
 							</div>
 						</div>
 
-						<div class="table-responsive">
-							<table class="table table-bordered table-striped align-middle text-center">
-								<thead class="table-light">
-									<tr>
-										<th>Producto</th>
-										<th>Cantidad</th>
-										<th>Total</th>
-										<th>Dirección</th>
-										<th>Remover</th>
-									</tr>
-								</thead>
-								<tbody>
-									@if (venta.VentasDetalles != null && venta.VentasDetalles.Any())
-									{
-										@foreach (var detalle in venta.VentasDetalles)
+						
+						<div class="col-md-8">
+							<h5 class="mb-3 text-secondary border-bottom pb-2">
+								<i class="bi bi-list-ul me-2"></i> Productos en la Venta
+							</h5>
+							<div class="card p-4 mb-4 rounded-4 border-success border-2 bg-light">
+								<div class="row g-3 align-items-end">
+									<div class="col-md-6">
+										<label class="form-label fw-bold mb-0">Producto</label>
+										<InputSelect class="form-select form-control-lg" @bind-Value="SelectedProductoId">
+											<option value="0" disabled>Seleccione un producto</option>
+											@foreach (var producto in ProductosDisponibles)
+											{
+												<option value="@producto.ProductoId">@producto.ProductoNombre</option>
+											}
+										</InputSelect>
+									</div>
+									<div class="col-md-3">
+										<label class="form-label fw-bold mb-0">Cantidad</label>
+										<InputNumber class="form-control form-control-lg" @bind-Value="CantidadDetalle" />
+									</div>
+									<div class="col-md-3">
+										<button type="button" class="btn btn-success w-100 d-flex align-items-center justify-content-center btn-lg" @onclick="AgregarProductoDetalleService">
+											<i class="bi bi-plus-lg me-2"></i> Agregar
+										</button>
+									</div>
+								</div>
+							</div>
+
+							<div class="table-responsive">
+								<table class="table table-hover table-striped align-middle text-center rounded-3 overflow-hidden">
+									<thead class="table-dark">
+										<tr>
+											<th>Producto</th>
+											<th>Cantidad</th>
+											<th>Precio Unitario</th>
+											<th>Subtotal</th>
+											<th>Acciones</th>
+										</tr>
+									</thead>
+									<tbody>
+										@if (venta.VentasDetalles != null && venta.VentasDetalles.Any())
+										{
+											@foreach (var detalle in venta.VentasDetalles)
+											{
+												<tr>
+													<td>@detalle.Producto?.ProductoNombre</td>
+													<td>@detalle.Cantidad</td>
+													<td>@detalle.PrecioUnitario.ToString("C")</td>
+													<td>@((detalle.PrecioUnitario * detalle.Cantidad).ToString("C"))</td>
+													<td>
+														<button type="button" class="btn btn-outline-danger btn-sm" @onclick="@(() => RemoverProductoDetalle(detalle))" title="Remover producto">
+															<i class="bi bi-trash-fill"></i>
+														</button>
+													</td>
+												</tr>
+											}
+										}
+										else
 										{
 											<tr>
-												<td>@detalle.Producto?.ProductoNombre</td>
-												<td>@detalle.Cantidad</td>
-												<td>@(((detalle.Producto?.ProductoMonto ?? 0) * detalle.Cantidad).ToString("C"))</td>
-												<td>
-													<InputText class="form-control" @bind-Value="detalle.Pago.Direccion" />
-												</td>
-												<td>
-													<button type="button" class="btn btn-outline-danger btn-sm" @onclick="@(() => RemoverProductoDetalle(detalle))">
-														<i class="bi bi-trash"></i>
-													</button>
-												</td>
+												<td colspan="5" class="text-center text-muted py-3">No hay productos agregados a esta venta.</td>
 											</tr>
 										}
-									}
-									else
-									{
-										<tr>
-											<td colspan="5" class="text-center text-muted">No hay productos agregados a esta venta.</td>
-										</tr>
-									}
-								</tbody>
-							</table>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+					
+						<div class="col-12 mt-4">
+							<h5 class="mb-3 text-secondary border-bottom pb-2">
+								<i class="bi bi-credit-card-2-front-fill me-2"></i> Datos de Pago
+							</h5>
+							@if (venta.VentasDetalles.Any() && venta.VentasDetalles.First().Pago != null)
+							{
+								var pago = venta.VentasDetalles.First().Pago;
+								<div class="row g-4">
+									<div class="col-md-6 col-lg-4">
+										<div class="form-floating">
+											<InputText class="form-control" id="nombreTitular" @bind-Value="pago.NombreTitular" />
+											<label for="nombreTitular">Nombre del Titular</label>
+										</div>
+									</div>
+									<div class="col-md-6 col-lg-4">
+										<div class="form-floating">
+											<InputText class="form-control" id="numeroTarjeta" @bind-Value="pago.NumeroTarjeta" maxlength="19" />
+											<label for="numeroTarjeta">Número de Tarjeta</label>
+										</div>
+									</div>
+									<div class="col-md-6 col-lg-2">
+										<div class="form-floating">
+											<InputText class="form-control" id="fechaExpiracion" @bind-Value="pago.FechaExpiracion" placeholder="MM/AA" maxlength="5" />
+											<label for="fechaExpiracion">Fecha Exp. (MM/AA)</label>
+										</div>
+									</div>
+									<div class="col-md-6 col-lg-2">
+										<div class="form-floating">
+											<InputText class="form-control" id="cvv" @bind-Value="pago.CVV" maxlength="4" />
+											<label for="cvv">CVV</label>
+										</div>
+										<ValidationMessage For="@(() => pago.CVV)" class="text-danger" />
+									</div>
+									<div class="col-12">
+										<div class="form-floating">
+											<InputText class="form-control" id="direccion" @bind-Value="pago.Direccion" />
+											<label for="direccion">Dirección de Envío</label>
+										</div>
+									</div>
+								</div>
+							}
+							else
+							{
+								<p class="text-muted text-center py-4">
+									Para ingresar los datos de pago, primero debes agregar al menos un producto a la venta.
+								</p>
+							}
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<div class="card-footer bg-light text-center py-3 rounded-bottom-4">
+			
+			<div class="text-center mt-5 mb-3">
 				<div class="btn-group" role="group">
-					<a href="/Ventas/Index" class="btn btn-secondary d-flex align-items-center">
+					<a href="/Ventas/Index" class="btn btn-secondary btn-lg d-flex align-items-center px-4">
 						<i class="bi bi-arrow-left me-2"></i> Volver al Listado
 					</a>
-					<button type="submit" class="btn btn-success d-flex align-items-center">
-						<i class="bi bi-save me-2"></i> Guardar Cambios
+					<button type="submit" class="btn btn-success btn-lg d-flex align-items-center px-4">
+						<i class="bi bi-save-fill me-2"></i> Guardar Cambios
 					</button>
-					<button type="button" class="btn btn-danger d-flex align-items-center" @onclick="() => MostrarModalEliminar = true">
-						<i class="bi bi-trash me-2"></i> Eliminar
+					<button type="button" class="btn btn-danger btn-lg d-flex align-items-center px-4" @onclick="() => MostrarModalEliminar = true">
+						<i class="bi bi-trash-fill me-2"></i> Eliminar
 					</button>
 				</div>
 			</div>
 		</div>
-	</div>
-</EditForm>
-
+	</EditForm>
+	}
 @if (MostrarModalEliminar)
 {
 	<div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
@@ -223,46 +294,6 @@
 			return;
 		}
 
-		foreach (var detalle in venta.VentasDetalles)
-		{
-			var original = detallesOriginales.FirstOrDefault(o => o.ProductoId == detalle.ProductoId);
-
-			if (original == null)
-			{
-				var restado = await productoService.RestarExistenciaProductoAsync(detalle.ProductoId, (int)detalle.Cantidad);
-				if (!restado)
-				{
-					toastService.ShowError($"Stock insuficiente para el producto '{detalle.Producto?.ProductoNombre}'");
-					return;
-				}
-				continue; 
-			}
-
-			int diferencia = (int)(detalle.Cantidad - original.Cantidad);
-
-			if (diferencia > 0)
-			{
-				var restado = await productoService.RestarExistenciaProductoAsync(detalle.ProductoId, diferencia);
-				if (!restado)
-				{
-					toastService.ShowError($"No hay suficiente stock para el producto '{detalle.Producto?.ProductoNombre}'");
-					return;
-				}
-			}
-			else if (diferencia < 0)
-			{
-				await productoService.RestaurarExistenciaProductoAsync(detalle.ProductoId, Math.Abs(diferencia));
-			}
-		}
-
-		foreach (var original in detallesOriginales)
-		{
-			if (!venta.VentasDetalles.Any(d => d.ProductoId == original.ProductoId))
-			{
-				await productoService.RestaurarExistenciaProductoAsync(original.ProductoId, (int)original.Cantidad);
-			}
-		}
-
 		var actualizado = await ventasService.Modificar(venta);
 
 		if (actualizado)
@@ -277,7 +308,7 @@
 	}
 
 
-	private async Task AgregarProductoDetalleService()
+	private void AgregarProductoDetalleService()
 	{
 		venta.VentasDetalles ??= new List<VentasDetalles>();
 
@@ -287,7 +318,7 @@
 			return;
 		}
 
-		bool agregado = await productoService.AgregarProductoDetalle(venta, SelectedProductoId, CantidadDetalle);
+		bool agregado = ventasService.AgregarProductoDetalleMemoria(venta, SelectedProductoId, CantidadDetalle, ProductosDisponibles);
 
 		if (agregado)
 		{
@@ -307,17 +338,26 @@
 		StateHasChanged();
 	}
 
+
 	private void RemoverProductoDetalle(VentasDetalles detalleToRemove)
 	{
 		SelectedProductoId = detalleToRemove.ProductoId;
 		CantidadDetalle = (int)detalleToRemove.Cantidad;
 
+		// Aumentar la existencia temporal del producto en la lista local
+		var producto = ProductosDisponibles.FirstOrDefault(p => p.ProductoId == detalleToRemove.ProductoId);
+		if (producto != null)
+		{
+			producto.ProductoCantidad += detalleToRemove.Cantidad;
+		}
+
 		venta.VentasDetalles.Remove(detalleToRemove);
 
-		toastService.ShowInfo("Producto removido del detalle.");
+		toastService.ShowInfo("Producto removido del detalle y stock actualizado temporalmente.");
 
 		StateHasChanged();
 	}
+
 
 	private void MostrarModalEliminarConfirmacion() => MostrarModalEliminar = true;
 

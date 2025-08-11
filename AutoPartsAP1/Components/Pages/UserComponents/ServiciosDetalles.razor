@@ -1,0 +1,89 @@
+﻿@page "/servicios/detalles"
+@inject ServiciosService servicioservice
+@inject NavigationManager navigationmanager
+@rendermode InteractiveServer
+@implements IDisposable
+
+<PageTitle>AutoParts | Nuestros Servicios</PageTitle>
+
+<div class="container my-5">
+
+    <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold text-dark">
+            <i class="bi bi-tools me-3 text-primary"></i>Nuestros Servicios
+        </h2>
+        <p class="lead text-muted">Explora la gama de servicios que ofrecemos para tu vehículo.</p>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center p-5">
+            <h5 class="text-muted">Cargando servicios...</h5>
+            <div class="spinner-border text-primary mt-3" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    }
+    else if (ListaServicios == null || !ListaServicios.Any())
+    {
+        <div class="alert alert-info py-4 text-center shadow-sm" role="alert">
+            <i class="bi bi-exclamation-circle-fill display-4 text-muted mb-3 d-block"></i>
+            <p class="lead fw-bold mb-0">No hay servicios disponibles en este momento.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4 justify-content-center">
+            @foreach (var servicio in ListaServicios)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <a href="/agendar-servicio" class="text-decoration-none">
+                        <div class="card h-100 border-0 shadow-lg rounded-4 overflow-hidden card-hover-effect">
+                            <img src="@(servicio.ServicioImagenUrl ?? "https://placehold.co/800x600/dee2e6/6c757d?text=No+Imagen+Disponible")"
+                                 class="card-img-top object-fit-cover"
+                                 style="height: 200px;"
+                                 alt="@servicio.Nombre" />
+                            <div class="card-body p-4 text-center d-flex flex-column">
+                                <h5 class="card-title fw-bold text-dark mb-2">@servicio.Nombre</h5>
+                                <p class="card-text text-muted flex-grow-1">@servicio.Descripcion</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+
+        <div class="text-center mt-5">
+            <a href="/agendar-servicio" class="btn btn-primary btn-lg fw-semibold shadow-lg">
+                <i class="bi bi-calendar-check me-2"></i>Agendar un Servicio
+            </a>
+        </div>
+    }
+</div>
+
+@code {
+    public List<Servicios> ListaServicios { get; set; } = new List<Servicios>();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        try
+        {
+           
+            ListaServicios = await servicioservice.Listar(s => s.ServicioId > 0);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar servicios: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    public void Dispose()
+    {
+
+    }
+}

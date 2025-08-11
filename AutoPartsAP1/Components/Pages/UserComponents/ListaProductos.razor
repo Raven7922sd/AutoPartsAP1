@@ -1,0 +1,184 @@
+﻿@page "/Lista/Productos"
+@inject ProductoService productoservice
+@inject CarritoService carritoservice
+@inject NavigationManager navigationmanager
+@inject IToastService itoastservice
+@rendermode InteractiveServer
+@implements IDisposable
+
+<PageTitle>AutoParts | Catálogo de Productos</PageTitle>
+
+<div class="container my-5">
+    <div class="text-center mb-4">
+        <h2 class="display-5 fw-bold text-dark">
+            <i class="bi bi-box-seam me-3 text-primary"></i>Catálogo de Productos
+        </h2>
+        <p class="lead text-muted">Explora todos los productos disponibles en nuestra tienda.</p>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <InputSelect class="form-select" @bind-Value="CategoriaSeleccionada">
+                <option value="">Todas las categorías</option>
+                <option value="Uso General">Uso General</option>
+                <option value="Motocicletas">Motocicletas</option>
+                <option value="Autos o Vehículos Ligeros">Autos o Vehículos Ligeros</option>
+                <option value="Vehículos Pesados">Vehículos Pesados</option>
+            </InputSelect>
+        </div>
+        <div class="col-md-8">
+            <div class="input-group">
+                <span class="input-group-text bg-white btn btn-primary">
+                    <i class="bi bi-search text-primary"></i>
+                </span>
+                <input type="text" class="form-control"
+                       placeholder="Buscar por nombre..."
+                       value="@busqueda"
+                       @oninput="ActualizarBusqueda" />
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center align-items-center" style="height: 40vh;">
+            <div class="text-center">
+                <h5 class="text-muted">Cargando productos...</h5>
+                <div class="spinner-border text-primary mt-3" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row gx-4 gx-lg-5 row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+            @if (!ProductosFiltrados.Any())
+            {
+                <div class="col-12 text-center p-5">
+                    <div class="alert alert-warning py-4 shadow-sm">
+                        <i class="bi bi-exclamation-circle-fill display-4 text-muted mb-3 d-block"></i>
+                        <p class="lead fw-bold mb-0">No se encontraron productos.</p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                @foreach (var producto in ProductosFiltrados)
+                {
+                    <div class="col">
+                        <div class="card h-100 border-0 shadow-lg rounded-4">
+                            <a href="/Productos/Detalles/@producto.ProductoId" class="text-decoration-none">
+                                <img src="@(producto.ProductoImagenUrl ?? "https://placehold.co/600x400/dee2e6/6c757d?text=Sin+Imagen")"
+                                     class="card-img-top object-fit-cover"
+                                     style="height: 200px;"
+                                     alt="@producto.ProductoNombre" />
+
+                                <span class="badge @(producto.ProductoCantidad > 5 ? "bg-success" : "bg-danger text-white") position-absolute top-0 end-0 m-3 fw-bold">
+                                    @(producto.ProductoCantidad > 0 ? $"Stock: {producto.ProductoCantidad}" : "Agotado")
+                                </span>
+                            </a>
+                            <div class="card-body text-center">
+                                <h5 class="card-title fw-bold">@producto.ProductoNombre</h5>
+                                <span class="badge bg-primary-subtle text-primary mb-2">@producto.Categoria</span>
+                                <p class="text-success fw-bold">RD$@producto.ProductoMonto.ToString("N2", new CultureInfo("es-DO"))</p>
+                                <p class="text-muted small">
+                                    @(producto.ProductoDescripcion?.Length > 80 ? producto.ProductoDescripcion.Substring(0, 80) + "..." : producto.ProductoDescripcion)
+                                </p>
+                            </div>
+                            <div class="card-footer bg-transparent border-0">
+                                <button class="btn btn-primary w-100 fw-bold"
+                                        @onclick="() => AñadirCarrito(producto)"
+                                        disabled="@(producto.ProductoCantidad <= 0)">
+                                    <i class="bi bi-cart-plus-fill me-2"></i>Añadir al carrito
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    }
+</div>
+
+@code {
+    public List<Productos> ListaProducts { get; set; } = new();
+    private bool isLoading = true;
+    private string busqueda = "";
+    private List<Productos> _productosFiltrados = new();
+    private CancellationTokenSource? _cts;
+
+    private string _categoriaSeleccionada = "";
+    private string CategoriaSeleccionada
+    {
+        get => _categoriaSeleccionada;
+        set
+        {
+            if (_categoriaSeleccionada != value)
+            {
+                _categoriaSeleccionada = value;
+                AplicarFiltros();
+            }
+        }
+    }
+
+    private IEnumerable<Productos> ProductosFiltrados => _productosFiltrados;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        ListaProducts = await productoservice.Listar(c => c.ProductoId > 0 && c.ProductoCantidad > 0);
+        _productosFiltrados = ListaProducts;
+        ActualizarCarrito();
+        isLoading = false;
+    }
+
+    private async void ActualizarBusqueda(ChangeEventArgs e)
+    {
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        busqueda = e.Value?.ToString() ?? "";
+
+        try
+        {
+            await Task.Delay(300, _cts.Token);
+            AplicarFiltros();
+            StateHasChanged();
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    private void AplicarFiltros()
+    {
+        _productosFiltrados = ListaProducts
+            .Where(p => string.IsNullOrEmpty(_categoriaSeleccionada) || p.Categoria == _categoriaSeleccionada)
+            .Where(p => string.IsNullOrEmpty(busqueda) || p.ProductoNombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        carritoservice.OnCartChanged -= ActualizarCarrito;
+    }
+
+    private async Task AñadirCarrito(Productos producto)
+    {
+        var exito = await carritoservice.AddItemConValidacionAsync(producto.ProductoId, 1);
+        if (!exito)
+            itoastservice.ShowError("No hay suficiente stock para agregar este producto.");
+        else
+            itoastservice.ShowSuccess("Producto agregado al carrito.");
+    }
+
+    private void ActualizarCarrito()
+    {
+        CarritoConteo = carritoservice.GetTotalItems();
+        StateHasChanged();
+    }
+
+    private int CarritoConteo { get; set; }
+}
