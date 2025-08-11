@@ -29,7 +29,6 @@
         [Range(0.1, 999999999, ErrorMessage = "Precio inválido.")]
         public double PrecioUnitario { get; set; }
         
-        [Required]
         public int PagoId { get; set; }
 
         [ForeignKey("PagoId")]

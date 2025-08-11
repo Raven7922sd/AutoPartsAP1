@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AutoPartsAP1.Components.Models;
 
@@ -12,6 +13,7 @@ public class PagoModel
     [Required(ErrorMessage = "Debe ingresar el número de tarjeta")]
 
     [StringLength(19, MinimumLength = 13, ErrorMessage = "El número de tarjeta debe tener entre 13 y 19 dígitos")]
+
     public string NumeroTarjeta { get; set; } = null!;
 
     [Required(ErrorMessage = "Debe ingresar la fecha de expiración")]
