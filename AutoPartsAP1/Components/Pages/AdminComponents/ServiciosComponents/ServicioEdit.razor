@@ -10,7 +10,7 @@
 @attribute [Authorize(Roles="Admin")]
 
 
-<PageTitle>Editar Producto</PageTitle>
+<PageTitle>Editar Servicio</PageTitle>
 @if (isLoading)
 {
 	<div class="d-flex justify-content-center align-items-center vh-100">
@@ -258,12 +258,12 @@ else
 			var Eliminado = await servicioService.Eliminar(Servicio.ServicioId);
 			if (Eliminado)
 			{
-				itoastservice.ShowSuccess("Producto eliminado correctamente.");
-				navigationmanager.NavigateTo("/Productos/Index");
+				itoastservice.ShowSuccess("Servicio eliminado correctamente.");
+				navigationmanager.NavigateTo("/Servicios/Index");
 			}
 			else
 			{
-				itoastservice.ShowError("Error al eliminar el Producto.");
+				itoastservice.ShowError("Error al eliminar el Servicio, servicio enlazado a una cita.");
 			}
 			MostrarModal = false;
 		}
