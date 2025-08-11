@@ -27,7 +27,7 @@
                     }
                     else if (!ventas.Any())
                     {
-                        <div class="alert alert-info text-center" role="alert">
+                        <div class="alert alert-warning text-center" role="alert">
                             No has realizado ninguna compra.
                         </div>
                     }
@@ -57,14 +57,14 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @foreach (var detalle in venta.VentasDetalles)
+                                                    @foreach (var detalle in venta.Detalles)
                                                     {
                                                         <tr>
-                                                            <td>@detalle.Producto?.ProductoNombre</td>
+                                                            <td>@detalle.ProductoNombre</td>
                                                             <td>@detalle.Cantidad</td>
-                                                            <td>@detalle.Producto?.ProductoMonto.ToString("C")</td>
-                                                            <td>@((detalle.Cantidad * (detalle.Producto?.ProductoMonto ?? 0)).ToString("C"))</td>
-                                                            <td>@detalle.Pago?.Direccion</td>
+                                                            <td>@detalle.Precio.ToString("C")</td>
+                                                            <td>@((detalle.Cantidad * (detalle.Precio)).ToString("C"))</td>
+                                                            <td>@detalle.Direccion</td>
                                                         </tr>
                                                     }
                                                 </tbody>
@@ -82,7 +82,7 @@
 </div>
 
 @code {
-    private List<Ventas> ventas = new();
+    private List<VentaDto> ventas = new();
 
     protected override async Task OnInitializedAsync()
     {
