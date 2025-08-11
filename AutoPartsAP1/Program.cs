@@ -7,6 +7,7 @@ using Blazored.Toast;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,7 @@ builder.Services.AddScoped<ComprasService>();
 builder.Services.AddScoped<ServiciosService>();
 builder.Services.AddScoped<CitaService>();
 builder.Services.AddBlazoredToast();
+builder.Services.AddMudServices();
 
 builder.Services.AddAuthentication(options =>
     {

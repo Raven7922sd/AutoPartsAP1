@@ -44,6 +44,7 @@ namespace AutoPartsAP1.Data
                 .WithMany()
                 .HasForeignKey(d => d.PagoId)
                 .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

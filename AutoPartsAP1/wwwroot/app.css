@@ -578,3 +578,228 @@ body {
 .appointment-accordion .accordion-body {
     padding: 1.5rem;
 }
+
+/*CSS PARA GESTION ORDENES*/
+.admin-ordenes-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.admin-ordenes-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 1.5rem;
+}
+
+.admin-ordenes-table-container {
+    overflow-x: auto;
+}
+
+.admin-ordenes-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+    .admin-ordenes-table th, .admin-ordenes-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .admin-ordenes-table th {
+        background-color: #f4f4f4;
+        font-weight: 600;
+        color: #555;
+    }
+
+    .admin-ordenes-table tr:hover {
+        background-color: #f9f9f9;
+    }
+
+.admin-ordenes-status-select {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.admin-ordenes-loading-message {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #666;
+    padding: 2rem;
+}
+
+.admin-ordenes-no-records {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #666;
+    padding: 2rem;
+}
+
+/* Estilos responsivos para la tabla */
+@media (max-width: 768px) {
+    .admin-ordenes-container {
+        padding: 1rem;
+    }
+
+    .admin-ordenes-table, .admin-ordenes-table thead, .admin-ordenes-table tbody, .admin-ordenes-table th, .admin-ordenes-table td, .admin-ordenes-table tr {
+        display: block;
+    }
+
+        .admin-ordenes-table thead tr {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+        }
+
+        .admin-ordenes-table tr {
+            border: 1px solid #ccc;
+            margin-bottom: 1rem;
+        }
+
+        .admin-ordenes-table td {
+            border: none;
+            border-bottom: 1px solid #eee;
+            position: relative;
+            padding-left: 50%;
+        }
+
+            .admin-ordenes-table td:before {
+                position: absolute;
+                top: 6px;
+                left: 6px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                font-weight: 600;
+                color: #555;
+            }
+
+            .admin-ordenes-table td:nth-of-type(1):before {
+                content: "ID Orden:";
+            }
+
+            .admin-ordenes-table td:nth-of-type(2):before {
+                content: "ID Usuario:";
+            }
+
+            .admin-ordenes-table td:nth-of-type(3):before {
+                content: "Fecha:";
+            }
+
+            .admin-ordenes-table td:nth-of-type(4):before {
+                content: "Estado Entrega:";
+            }
+}
+
+/*CSS PARA MIS ORDENES*/
+
+.mis-ordenes-container {
+    padding: 2rem;
+    max-width: 800px;
+    margin: auto;
+}
+
+.mis-ordenes-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 1.5rem;
+}
+
+.mis-ordenes-timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+    .mis-ordenes-timeline::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 4px;
+        background-color: #ddd;
+        border-radius: 2px;
+    }
+
+.mis-ordenes-timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+    padding-left: 2rem;
+}
+
+.mis-ordenes-timeline-item-header {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.mis-ordenes-timeline-item::before {
+    content: '';
+    position: absolute;
+    width: 1.5rem;
+    height: 1.5rem;
+    left: -0.75rem;
+    top: 0;
+    border-radius: 50%;
+    border: 4px solid white;
+    z-index: 1;
+}
+
+.mis-ordenes-timeline-item.delivered::before {
+    background-color: #28a745;
+}
+
+.mis-ordenes-timeline-item.shipped::before {
+    background-color: #17a2b8;
+}
+
+.mis-ordenes-timeline-item.processing::before {
+    background-color: #ffc107;
+}
+
+.mis-ordenes-timeline-item.cancelled::before {
+    background-color: #dc3545;
+}
+
+.mis-ordenes-timeline-icon {
+    position: absolute;
+    width: 1.5rem;
+    height: 1.5rem;
+    left: -0.75rem;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.mis-ordenes-card {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.mis-ordenes-product-list {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 1rem;
+}
+
+    .mis-ordenes-product-list li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #eee;
+    }
+
+        .mis-ordenes-product-list li:last-child {
+            border-bottom: none;
+        }
