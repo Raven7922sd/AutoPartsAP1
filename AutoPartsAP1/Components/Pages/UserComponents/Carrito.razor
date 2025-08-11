@@ -7,7 +7,6 @@
 @using AutoPartsAP1.Components.Models;
 @using Microsoft.AspNetCore.Components.Authorization
 @rendermode InteractiveServer
-@inject AuthenticationStateProvider authStateProvider
 
 <PageTitle>Tu Carrito</PageTitle>
 
@@ -70,7 +69,7 @@
                                             <button class="btn btn-outline-secondary btn-sm" @onclick="async () => await UpdateQuantity(item.Producto.ProductoId, item.Cantidad + 1)">+</button>
                                         </div>
                                     </td>
-                                    <td class="align-middle fw-bold">RD$@item.Subtotal.ToString("N2", CultureInfo.GetCultureInfo("es-DO"))</td>
+                                    <td class="align-middle fw-bold">RD$@item.Producto.ProductoMonto.ToString("N2", CultureInfo.GetCultureInfo("es-DO"))</td>
                                     <td class="align-middle">
                                         <button class="btn btn-danger btn-sm" @onclick="() => RemoveItem(item.Producto.ProductoId)">
                                             <i class="bi bi-trash"></i>
@@ -155,17 +154,12 @@
     [Inject]
     private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
 
-    private bool usuarioAutenticado = false;
     private bool mostrandoFormularioPago = false;
     private PagoModel datosPago = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         carritoservice.OnCartChanged += StateHasChanged;
-
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        usuarioAutenticado = user.Identity?.IsAuthenticated ?? false;
     }
 
     public void Dispose()
@@ -194,13 +188,13 @@
         }
     }
 
-    private void RemoveItem(int productoId)
+    private async Task RemoveItem(int productoId)
     {
         carritoservice.RemoveItem(productoId);
         toastService.ShowWarning("Producto eliminado del carrito.");
     }
 
-    private void ClearCart()
+    private async Task ClearCart()
     {
         carritoservice.ClearCart();
         toastService.ShowWarning("El carrito ha sido vaciado.");
