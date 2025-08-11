@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AutoPartsAP1.Components.Service;
 
-public class CitaService(IDbContextFactory<ApplicationDbContext> DbFactory)
+public class CitaService(IDbContextFactory<ApplicationDbContext> DbFactory, ServiciosService serviciosService)
 {
 
     public async Task<bool> GuardarCitaAsync(Cita cita)
@@ -17,6 +17,12 @@ public class CitaService(IDbContextFactory<ApplicationDbContext> DbFactory)
             {
                 cita.CodigoConfirmacion = GenerateUniqueCode();
                 context.Citas.Add(cita);
+
+                var servicio = await serviciosService.BuscarPorNombre(cita.ServicioSolicitado);
+                if (servicio != null)
+                {
+                    await serviciosService.IncrementarSolicitadosAsync(servicio.ServicioId, 1);
+                }
             }
             else
             {
@@ -39,7 +45,6 @@ public class CitaService(IDbContextFactory<ApplicationDbContext> DbFactory)
                              .FirstOrDefaultAsync(c => c.CitaId == citaId);
     }
 
-    // Método para confirmar una cita
     public async Task<bool> ConfirmarCitaAsync(int citaId)
     {
         await using var context = await DbFactory.CreateDbContextAsync();
@@ -135,4 +140,3 @@ public class CitaService(IDbContextFactory<ApplicationDbContext> DbFactory)
         return Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
     }
 }
-
