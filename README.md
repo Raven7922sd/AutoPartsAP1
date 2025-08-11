@@ -19,12 +19,12 @@ Además, cuenta con una interfaz de administración para gestionar productos, ve
 
 ## Cuentas de prueba
 ### Administrador
-- **Correo:** admin@demo.com  
-- **Contraseña:** admin123  
+- **Correo:** johan@gmail.com  
+- **Contraseña:** Hola1234. 
 
 ### Cliente
-- **Correo:** cliente@demo.com  
-- **Contraseña:** cliente123  
+- **Correo:** pedro@gmail.com   
+- **Contraseña:** Hola1234. 
 
 
 ## Tecnologías utilizadas
