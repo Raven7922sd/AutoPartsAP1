@@ -21,12 +21,6 @@ public class ServiciosService(IDbContextFactory<ApplicationDbContext> DbFactory)
         return await context.Servicio.AnyAsync(a => a.ServicioId == servicioId);
     }
 
-    public async Task<bool> ExisteNombre(string Nombre)
-    {
-        await using var context = await DbFactory.CreateDbContextAsync();
-        return await context.Servicio.AnyAsync(n => n.Nombre.ToLower() == Nombre.ToLower());
-    }
-
     public async Task<bool> InsertarServicio(Servicios servicio)
     {
         await using var context = await DbFactory.CreateDbContextAsync();
@@ -43,14 +37,35 @@ public class ServiciosService(IDbContextFactory<ApplicationDbContext> DbFactory)
 
     public async Task<bool> Eliminar(int servicioId)
     {
+        var servicioAEliminar = await Buscar(servicioId);
+        if (servicioAEliminar == null)
+            return false;
+
+        if (await ExistenCitasConServicio(servicioAEliminar.Nombre))
+        {
+            return false;
+        }
+
         await using var context = await DbFactory.CreateDbContextAsync();
         return await context.Servicio.AsNoTracking().Where(a => a.ServicioId == servicioId).ExecuteDeleteAsync() > 0;
+    }
+
+    public async Task<bool> ExistenCitasConServicio(string nombreServicio)
+    {
+        await using var context = await DbFactory.CreateDbContextAsync();
+        return await context.Citas.AnyAsync(c => c.ServicioSolicitado == nombreServicio);
     }
 
     public async Task<Servicios?> Buscar(int servicioId)
     {
         await using var context = await DbFactory.CreateDbContextAsync();
         return await context.Servicio.FirstOrDefaultAsync(a => a.ServicioId == servicioId);
+    }    
+    
+    public async Task<Servicios?> BuscarPorNombre(string ServicioNombre)
+    {
+        await using var context = await DbFactory.CreateDbContextAsync();
+        return await context.Servicio.FirstOrDefaultAsync(a => a.Nombre == ServicioNombre);
     }
 
 
@@ -73,13 +88,17 @@ public class ServiciosService(IDbContextFactory<ApplicationDbContext> DbFactory)
         {
             var valor = valorFiltro.ToLower();
 
-            if (filtroCampo == "ProductoId" && int.TryParse(valorFiltro, out var productoId))
+            if (filtroCampo == "ServicioId" && int.TryParse(valorFiltro, out var ServicioId))
             {
-                query = query.Where(a => a.ServicioId == productoId);
+                query = query.Where(a => a.ServicioId == ServicioId);
             }
             else if (filtroCampo == "Nombre")
             {
                 query = query.Where(a => a.Nombre.ToLower().Contains(valor));
+            }
+            else if (filtroCampo == "Descripción")
+            {
+                query = query.Where(a => a.Descripcion.ToLower().Contains(valor));
             }
             else if (filtroCampo == "Monto" && double.TryParse(valorFiltro, out var monto))
             {
