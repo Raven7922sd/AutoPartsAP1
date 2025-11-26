@@ -78,7 +78,7 @@ public class CitaService(IDbContextFactory<ApplicationDbContext> DbFactory, Serv
         }
     }
 
-    public async Task<PaginacionResultado<Cita>> BuscarCitasAsync(string filtro, string valorFiltro, DateTime? fechaDesde, DateTime? fechaHasta, int pagina, int tamañoPagina)
+    public async Task<PaginacionResultado<Cita>> BuscarCitasAsync(string filtro, string valorFiltro, DateTime? fechaDesde, DateTime? fechaHasta, int pagina, int tamanoPagina)
     {
         await using var context = await DbFactory.CreateDbContextAsync();
         var query = context.Citas.AsQueryable();
@@ -112,15 +112,15 @@ public class CitaService(IDbContextFactory<ApplicationDbContext> DbFactory, Serv
 
         var totalItems = await query.CountAsync();
         var citasPaginadas = await query
-            .Skip((pagina - 1) * tamañoPagina)
-            .Take(tamañoPagina)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
             .AsNoTracking()
             .ToListAsync();
 
         return new PaginacionResultado<Cita>
         {
             Items = citasPaginadas,
-            TotalPaginas = (int)Math.Ceiling(totalItems / (double)tamañoPagina),
+            TotalPaginas = (int)Math.Ceiling(totalItems / (double)tamanoPagina),
             PaginaActual = pagina
         };
     }

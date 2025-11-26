@@ -1,0 +1,8 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile.api"
+
+[deploy]
+startCommand = "dotnet AutoParts.Api.dll"
+restartPolicyType = "on-failure"
+restartPolicyMaxRetries = 10
