@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using AutoPartsAP1.Data;
+using AutoParts.Shared.Data;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Identity;

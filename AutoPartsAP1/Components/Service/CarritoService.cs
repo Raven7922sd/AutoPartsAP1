@@ -1,5 +1,4 @@
-﻿using AutoPartsAP1.Components.Models;
-using AutoPartsAP1.Data;
+﻿using AutoParts.Shared.Data;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;

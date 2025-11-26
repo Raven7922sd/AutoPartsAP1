@@ -1,8 +1,8 @@
 using AutoPartsAP1.Components;
 using AutoPartsAP1.Components.Account;
-using AutoPartsAP1.Components.Service;
-using AutoPartsAP1.Components.Services;
-using AutoPartsAP1.Data;
+using AutoPartsAP1.Components.Services; // Keep for CarritoService
+using AutoParts.Shared.Data;
+using AutoParts.Shared.Services;
 using Blazored.Toast;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -10,6 +10,10 @@ using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configurar puerto dinámico para Railway
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -19,22 +23,32 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
-builder.Services.AddScoped<ProductoService>();
-builder.Services.AddScoped<CarritoService>();
-builder.Services.AddScoped<VentasService>();
-builder.Services.AddScoped<ComprasService>();
-builder.Services.AddScoped<ServiciosService>();
-builder.Services.AddScoped<CitaService>();
+
+// Shared services
+builder.Services.AddScoped<AutoParts.Shared.Services.ProductoService>();
+builder.Services.AddScoped<AutoParts.Shared.Services.VentasService>();
+builder.Services.AddScoped<AutoParts.Shared.Services.ComprasService>();
+builder.Services.AddScoped<AutoParts.Shared.Services.ServiciosService>();
+builder.Services.AddScoped<AutoParts.Shared.Services.CitaService>();
+
+// Local Blazor-specific service
+builder.Services.AddScoped<AutoPartsAP1.Components.Services.CarritoService>();
+
+// HttpClient para consumir API (opcional)
+builder.Services.AddHttpClient("AutoPartsApi", client =>
+{
+    client.BaseAddress = new Uri("https://autoparts-api.up.railway.app/");  // URL de tu API en Railway
+});
+
 builder.Services.AddBlazoredToast();
 builder.Services.AddMudServices();
 
 builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultScheme = IdentityConstants.ApplicationScheme;
-        options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-    })
-    .AddIdentityCookies();
-
+{
+    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+})
+.AddIdentityCookies();
 
 var conStr = builder.Configuration.GetConnectionString("SqlServerConStr");
 builder.Services.AddDbContextFactory<ApplicationDbContext>(o => o.UseSqlServer(conStr));
@@ -50,6 +64,13 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 
 var app = builder.Build();
 
+// Aplicar migraciones automáticamente en Railway
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -62,8 +83,8 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
-
+// No usar HTTPS redirect en Railway (ellos manejan SSL)
+// app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 

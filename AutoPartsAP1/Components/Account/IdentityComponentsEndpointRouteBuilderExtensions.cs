@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using AutoPartsAP1.Components.Account.Pages;
 using AutoPartsAP1.Components.Account.Pages.Manage;
-using AutoPartsAP1.Data;
+using AutoParts.Shared.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;

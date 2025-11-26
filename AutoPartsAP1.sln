@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.12.35707.178
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11222.15 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoPartsAP1", "AutoPartsAP1\AutoPartsAP1.csproj", "{98E208C1-BCC5-46E7-AC0C-B875995E8032}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoParts.Api", "AutoParts.Api\AutoParts.Api.csproj", "{B8878C50-B3BD-4B6F-A2CC-F836D0AF789E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoParts.Shared", "AutoParts.Shared\AutoParts.Shared.csproj", "{9FDDE94B-8FD5-4A1D-B6EF-399AB49BFC56}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,8 +19,19 @@ Global
 		{98E208C1-BCC5-46E7-AC0C-B875995E8032}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98E208C1-BCC5-46E7-AC0C-B875995E8032}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{98E208C1-BCC5-46E7-AC0C-B875995E8032}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8878C50-B3BD-4B6F-A2CC-F836D0AF789E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8878C50-B3BD-4B6F-A2CC-F836D0AF789E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8878C50-B3BD-4B6F-A2CC-F836D0AF789E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8878C50-B3BD-4B6F-A2CC-F836D0AF789E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FDDE94B-8FD5-4A1D-B6EF-399AB49BFC56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FDDE94B-8FD5-4A1D-B6EF-399AB49BFC56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FDDE94B-8FD5-4A1D-B6EF-399AB49BFC56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FDDE94B-8FD5-4A1D-B6EF-399AB49BFC56}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AB461DC4-694E-4A78-A050-5A774E0993FC}
 	EndGlobalSection
 EndGlobal

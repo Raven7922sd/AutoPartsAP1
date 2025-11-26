@@ -21,4 +21,8 @@
     <PackageReference Include="MudBlazor" Version="8.11.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AutoParts.Shared\AutoParts.Shared.csproj" />
+  </ItemGroup>
+
 </Project>
