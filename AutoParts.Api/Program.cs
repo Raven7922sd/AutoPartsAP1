@@ -5,9 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar puerto dinámico para Railway
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+// Configurar Kestrel para Railway
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+    serverOptions.ListenAnyIP(int.Parse(port));
+});
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -18,7 +21,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Configure DbContext
-var conStr = builder.Configuration.GetConnectionString("SqlServerConStr");
+var conStr = builder.Configuration.GetConnectionString("SqlServerConStr") 
+    ?? Environment.GetEnvironmentVariable("ConnectionStrings__SqlServerConStr");
+
+if (string.IsNullOrEmpty(conStr))
+{
+    throw new InvalidOperationException("Connection string 'SqlServerConStr' not found.");
+}
+
 builder.Services.AddDbContextFactory<ApplicationDbContext>(o => o.UseSqlServer(conStr));
 
 // Add Identity
@@ -34,12 +44,12 @@ builder.Services.AddScoped<ComprasService>();
 builder.Services.AddScoped<ServiciosService>();
 builder.Services.AddScoped<CitaService>();
 
-// Configure CORS - Permitir desde Blazor y apps móviles
+// Configure CORS - Permitir desde cualquier origen
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()  // Permitir desde cualquier origen (Railway genera URLs dinámicas)
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -50,26 +60,38 @@ builder.Services.AddAuthorizationBuilder();
 
 var app = builder.Build();
 
-// Aplicar migraciones automáticamente en Railway
-using (var scope = app.Services.CreateScope())
+// Aplicar migraciones automáticamente
+try
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await db.Database.MigrateAsync();
+    }
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "An error occurred while migrating the database.");
 }
 
 // Configure the HTTP request pipeline
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoParts API V1");
+    c.RoutePrefix = string.Empty; // Swagger en la raíz
+});
 
-// No usar HTTPS redirect en Railway (ellos manejan SSL)
-// app.UseHttpsRedirection();
-
-app.UseCors("AllowAll");  // Usar la política de CORS
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 app.MapIdentityApi<ApplicationUser>();
+
+// Health check endpoint
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
 app.Run();
