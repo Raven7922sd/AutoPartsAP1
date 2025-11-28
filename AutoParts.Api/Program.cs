@@ -5,12 +5,15 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar Kestrel para Railway
-builder.WebHost.ConfigureKestrel(serverOptions =>
+// Configurar Kestrel para Railway solo en producción
+if (!builder.Environment.IsDevelopment())
 {
-    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-    serverOptions.ListenAnyIP(int.Parse(port));
-});
+    builder.WebHost.ConfigureKestrel(serverOptions =>
+    {
+        var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+        serverOptions.ListenAnyIP(int.Parse(port));
+    });
+}
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -76,12 +79,24 @@ catch (Exception ex)
 }
 
 // Configure the HTTP request pipeline
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+if (app.Environment.IsDevelopment())
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoParts API V1");
-    c.RoutePrefix = string.Empty; // Swagger en la raíz
-});
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoParts API V1");
+        c.RoutePrefix = string.Empty; // Swagger en la raíz (http://localhost:5022)
+    });
+}
+else
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoParts API V1");
+        c.RoutePrefix = string.Empty;
+    });
+}
 
 app.UseCors("AllowAll");
 
