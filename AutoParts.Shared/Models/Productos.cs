@@ -26,14 +26,25 @@ public class Productos
     public string ProductoDescripcion { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "La imagen es obligatoria.")]
-    [JsonIgnore] // No serializar este campo en JSON
+    [JsonIgnore] // No serializar este campo en JSON del API
     public byte[]? ProductoImagen { get; set; }
 
     [NotMapped] // No guardar en base de datos
-    public string? ProductoImagenUrl =>
-        ProductoImagen != null
+    public string? ProductoImagenUrl
+    {
+        get => ProductoImagen != null
             ? $"data:image/png;base64,{Convert.ToBase64String(ProductoImagen)}"
             : null;
+        set
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                // Extraer el base64 del data URL si viene en ese formato
+                var base64Data = value.Contains(",") ? value.Split(',')[1] : value;
+                ProductoImagen = Convert.FromBase64String(base64Data);
+            }
+        }
+    }
 
     [Required(ErrorMessage = "La elección de categoría es obligatoria.")]
     public string Categoria { get; set; } = string.Empty;
