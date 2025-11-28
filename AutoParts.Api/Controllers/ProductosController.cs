@@ -1,5 +1,4 @@
 using AutoParts.Shared.Data;
-using AutoParts.Shared.DTOs;
 using AutoParts.Shared.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,25 +19,12 @@ public class ProductosController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<ProductoDto>>> GetProductos()
+    public async Task<ActionResult<List<Productos>>> GetProductos()
     {
         try
         {
             var productos = await _productoService.Listar(p => true);
-            var productosDto = productos.Select(p => new ProductoDto
-            {
-                ProductoId = p.ProductoId,
-                ProductoNombre = p.ProductoNombre,
-                ProductoMonto = p.ProductoMonto,
-                ProductoCantidad = p.ProductoCantidad,
-                ProductoDescripcion = p.ProductoDescripcion,
-                ProductoImagenBase64 = p.ProductoImagen != null ? Convert.ToBase64String(p.ProductoImagen) : null,
-                ProductoImagenUrl = p.ProductoImagenUrl,
-                Categoria = p.Categoria,
-                Fecha = p.Fecha
-            }).ToList();
-
-            return Ok(productosDto);
+            return Ok(productos);
         }
         catch (Exception ex)
         {
@@ -48,7 +34,7 @@ public class ProductosController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<ProductoDto>> GetProducto(int id)
+    public async Task<ActionResult<Productos>> GetProducto(int id)
     {
         try
         {
@@ -56,20 +42,7 @@ public class ProductosController : ControllerBase
             if (producto == null)
                 return NotFound($"Producto con ID {id} no encontrado");
 
-            var productoDto = new ProductoDto
-            {
-                ProductoId = producto.ProductoId,
-                ProductoNombre = producto.ProductoNombre,
-                ProductoMonto = producto.ProductoMonto,
-                ProductoCantidad = producto.ProductoCantidad,
-                ProductoDescripcion = producto.ProductoDescripcion,
-                ProductoImagenBase64 = producto.ProductoImagen != null ? Convert.ToBase64String(producto.ProductoImagen) : null,
-                ProductoImagenUrl = producto.ProductoImagenUrl,
-                Categoria = producto.Categoria,
-                Fecha = producto.Fecha
-            };
-
-            return Ok(productoDto);
+            return Ok(producto);
         }
         catch (Exception ex)
         {

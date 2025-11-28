@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace AutoParts.Shared.Data;
 
@@ -25,8 +26,10 @@ public class Productos
     public string ProductoDescripcion { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "La imagen es obligatoria.")]
+    [JsonIgnore] // No serializar este campo en JSON
     public byte[]? ProductoImagen { get; set; }
 
+    [NotMapped] // No guardar en base de datos
     public string? ProductoImagenUrl =>
         ProductoImagen != null
             ? $"data:image/png;base64,{Convert.ToBase64String(ProductoImagen)}"
