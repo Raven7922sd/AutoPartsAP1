@@ -30,6 +30,11 @@ public class Productos
     public byte[]? ProductoImagen { get; set; }
 
     [NotMapped] // No guardar en base de datos
+    public string? ProductoImagenBase64 => ProductoImagen != null
+        ? Convert.ToBase64String(ProductoImagen)
+        : null;
+
+    [NotMapped] // No guardar en base de datos
     public string? ProductoImagenUrl
     {
         get => ProductoImagen != null
