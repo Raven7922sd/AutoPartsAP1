@@ -1,0 +1,39 @@
+### API de Carrito - AutoParts
+### Base URL
+@baseUrl = https://localhost:7053
+@token = YOUR_JWT_TOKEN_HERE
+
+### 1. Obtener todos los items del carrito del usuario autenticado
+GET {{baseUrl}}/api/carrito
+Authorization: Bearer {{token}}
+
+### 2. Obtener el total del carrito (cantidad de items y precio total)
+GET {{baseUrl}}/api/carrito/total
+Authorization: Bearer {{token}}
+
+### 3. Agregar un producto al carrito
+POST {{baseUrl}}/api/carrito
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productoId": 1,
+  "cantidad": 2
+}
+
+### 4. Actualizar la cantidad de un item del carrito
+PUT {{baseUrl}}/api/carrito/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cantidad": 5
+}
+
+### 5. Eliminar un item del carrito
+DELETE {{baseUrl}}/api/carrito/1
+Authorization: Bearer {{token}}
+
+### 6. Vaciar el carrito completamente
+DELETE {{baseUrl}}/api/carrito/clear
+Authorization: Bearer {{token}}

@@ -1,0 +1,93 @@
+@AutoParts.Api_HostAddress = http://localhost:5022
+@AutoParts.Api_HostAddress_Production = https://autoparts-api.up.railway.app
+
+### Test - Verificar que el API funcione (NO requiere autenticación)
+GET {{AutoParts.Api_HostAddress}}/api/Users/test
+Accept: application/json
+
+###
+
+### Contar Usuarios (NO requiere autenticación)
+GET {{AutoParts.Api_HostAddress}}/api/Users/count
+Accept: application/json
+
+###
+
+### Registrar Usuario CON teléfono (NO requiere autenticación)
+POST {{AutoParts.Api_HostAddress}}/api/Users/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Test123!",
+  "phoneNumber": "555-1234"
+}
+
+###
+
+### Registrar Usuario SIN teléfono (NO requiere autenticación) - Para App Móvil
+POST {{AutoParts.Api_HostAddress}}/api/Users/register
+Content-Type: application/json
+
+{
+  "email": "mobile@example.com",
+  "password": "Test123!"
+}
+
+###
+
+### Iniciar Sesión (NO requiere autenticación)
+POST {{AutoParts.Api_HostAddress}}/api/Users/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Test123!"
+}
+
+###
+
+### Obtener Todos los Usuarios (REQUIERE Admin)
+GET {{AutoParts.Api_HostAddress}}/api/Users
+Accept: application/json
+
+###
+
+### Obtener Usuario por ID (REQUIERE autenticación)
+GET {{AutoParts.Api_HostAddress}}/api/Users/{id}
+Accept: application/json
+
+###
+
+### Obtener Usuario por Email (REQUIERE autenticación)
+GET {{AutoParts.Api_HostAddress}}/api/Users/email/test@example.com
+Accept: application/json
+
+###
+
+### Actualizar Usuario (REQUIERE autenticación)
+PUT {{AutoParts.Api_HostAddress}}/api/Users/{id}
+Content-Type: application/json
+
+{
+  "email": "newemail@example.com",
+  "phoneNumber": "555-9999"
+}
+
+###
+
+### Actualizar Contraseña (REQUIERE autenticación)
+PUT {{AutoParts.Api_HostAddress}}/api/Users/{id}
+Content-Type: application/json
+
+{
+  "currentPassword": "Test123!",
+  "newPassword": "NewPassword123!"
+}
+
+###
+
+### Eliminar Usuario (REQUIERE Admin)
+DELETE {{AutoParts.Api_HostAddress}}/api/Users/{id}
+
+###
