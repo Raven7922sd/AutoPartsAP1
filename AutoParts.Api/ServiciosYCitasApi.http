@@ -1,0 +1,255 @@
+### API de Servicios - AutoParts
+### Base URL
+@baseUrl = https://localhost:7053
+@productionUrl = https://autopartsap1-production.up.railway.app
+@token = YOUR_JWT_TOKEN_HERE
+
+###############################################
+### ?? SERVICIOS
+###############################################
+
+### 1. Obtener todos los servicios (Público)
+GET {{baseUrl}}/api/Servicios
+Content-Type: application/json
+
+### Respuesta esperada:
+# [
+#   {
+#     "servicioId": 1,
+#     "nombre": "Cambio de Aceite",
+#     "precio": 800.00,
+#     "descripcion": "Cambio de aceite con filtro incluido",
+#     "duracionEstimada": 0.5,
+#     "servicioImagenBase64": "base64-string...",
+#     "solicitados": 15,
+#     "fechaServicio": "2024-01-15T10:00:00"
+#   }
+# ]
+
+### 2. Obtener un servicio específico por ID (Público)
+GET {{baseUrl}}/api/Servicios/1
+Content-Type: application/json
+
+### 3. Buscar servicios por nombre (Público)
+GET {{baseUrl}}/api/Servicios/buscar/aceite
+Content-Type: application/json
+
+### 4. Crear un nuevo servicio (Solo Admin)
+POST {{baseUrl}}/api/Servicios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Cambio de Aceite",
+  "precio": 800.00,
+  "descripcion": "Cambio de aceite con filtro incluido y revisión general",
+  "duracionEstimada": 0.5,
+  "servicioImagenBase64": "/9j/4AAQSkZJRgABAQEAYABgAAD..."
+}
+
+### 5. Obtener estadísticas de servicios (Solo Admin)
+GET {{baseUrl}}/api/Servicios/estadisticas
+Authorization: Bearer {{token}}
+
+### Respuesta esperada:
+# {
+#   "totalServicios": 10,
+#   "totalSolicitados": 150,
+#   "gananciaTotal": 120000.00,
+#   "serviciosMasSolicitados": [
+#     {
+#       "servicioId": 1,
+#       "nombre": "Cambio de Aceite",
+#       "precio": 800.00,
+#       "solicitados": 45,
+#       "ganancia": 36000.00
+#     }
+#   ]
+# }
+
+###############################################
+### ?? CITAS
+###############################################
+
+### 6. Obtener todas mis citas (Usuario autenticado)
+GET {{baseUrl}}/api/Citas
+Authorization: Bearer {{token}}
+
+### Respuesta esperada:
+# [
+#   {
+#     "citaId": 1,
+#     "clienteNombre": "Juan Pérez",
+#     "applicationUserId": "user-id-123",
+#     "servicioSolicitado": "Cambio de Aceite",
+#     "fechaCita": "2024-12-15T10:00:00",
+#     "confirmada": false,
+#     "codigoConfirmacion": "ABC12345"
+#   }
+# ]
+
+### 7. Obtener una cita específica por ID
+GET {{baseUrl}}/api/Citas/1
+Authorization: Bearer {{token}}
+
+### 8. Crear una nueva cita
+POST {{baseUrl}}/api/Citas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "clienteNombre": "Juan Pérez",
+  "servicioSolicitado": "Cambio de Aceite",
+  "fechaCita": "2024-12-15T10:00:00"
+}
+
+### Respuesta esperada (201 Created):
+# {
+#   "citaId": 1,
+#   "clienteNombre": "Juan Pérez",
+#   "applicationUserId": "user-id-123",
+#   "servicioSolicitado": "Cambio de Aceite",
+#   "fechaCita": "2024-12-15T10:00:00",
+#   "confirmada": false,
+#   "codigoConfirmacion": "ABC12345"
+# }
+
+### 9. Actualizar una cita
+PUT {{baseUrl}}/api/Citas/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "clienteNombre": "Juan Carlos Pérez",
+  "fechaCita": "2024-12-16T14:00:00"
+}
+
+### 10. Confirmar una cita
+POST {{baseUrl}}/api/Citas/1/confirmar
+Authorization: Bearer {{token}}
+
+### 11. Cancelar una cita
+DELETE {{baseUrl}}/api/Citas/1
+Authorization: Bearer {{token}}
+
+### 12. Obtener todas las citas (Solo Admin)
+GET {{baseUrl}}/api/Citas/todas?pagina=1&tamanoPagina=10
+Authorization: Bearer {{token}}
+
+### 13. Buscar citas con filtros (Solo Admin)
+GET {{baseUrl}}/api/Citas/buscar?filtro=clientenombre&valorFiltro=Juan&pagina=1&tamanoPagina=10
+Authorization: Bearer {{token}}
+
+###############################################
+### ?? PRUEBAS EN PRODUCCIÓN
+###############################################
+
+### PROD 1: Obtener servicios en producción
+GET {{productionUrl}}/api/Servicios
+Content-Type: application/json
+
+### PROD 2: Obtener un servicio específico
+GET {{productionUrl}}/api/Servicios/1
+Content-Type: application/json
+
+### PROD 3: Crear cita en producción
+POST {{productionUrl}}/api/Citas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "clienteNombre": "Pedro Test",
+  "servicioSolicitado": "Cambio de Aceite",
+  "fechaCita": "2024-12-20T10:00:00"
+}
+
+### PROD 4: Obtener mis citas en producción
+GET {{productionUrl}}/api/Citas
+Authorization: Bearer {{token}}
+
+###############################################
+### ?? CASOS DE ERROR
+###############################################
+
+### ERROR 1: Crear cita sin autenticación (401)
+POST {{baseUrl}}/api/Citas
+Content-Type: application/json
+
+{
+  "clienteNombre": "Test",
+  "servicioSolicitado": "Cambio de Aceite",
+  "fechaCita": "2024-12-15T10:00:00"
+}
+
+### ERROR 2: Crear cita con servicio inexistente (400)
+POST {{baseUrl}}/api/Citas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "clienteNombre": "Test",
+  "servicioSolicitado": "Servicio que no existe",
+  "fechaCita": "2024-12-15T10:00:00"
+}
+
+### ERROR 3: Crear cita con fecha pasada (400)
+POST {{baseUrl}}/api/Citas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "clienteNombre": "Test",
+  "servicioSolicitado": "Cambio de Aceite",
+  "fechaCita": "2020-01-01T10:00:00"
+}
+
+### ERROR 4: Actualizar cita de otro usuario (403)
+PUT {{baseUrl}}/api/Citas/999
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "clienteNombre": "Test"
+}
+
+###############################################
+### ?? NOTAS
+###############################################
+
+# 1. Servicios:
+#    - Son públicos (no requieren autenticación para consultar)
+#    - Solo Admin puede crear/modificar servicios
+#    - Tienen contador de solicitudes automático
+
+# 2. Citas:
+#    - Requieren autenticación
+#    - Se asocian automáticamente al usuario logueado
+#    - Generan código de confirmación único
+#    - Incrementan contador de servicios solicitados
+#    - No se pueden modificar una vez confirmadas (excepto Admin)
+
+# 3. Validaciones:
+#    - Fecha de cita debe ser futura
+#    - Servicio debe existir
+#    - Usuario solo puede ver/modificar sus propias citas
+#    - Admin puede ver/modificar todas las citas
+
+# 4. Código de Confirmación:
+#    - Se genera automáticamente al crear la cita
+#    - Formato: 8 caracteres alfanuméricos en mayúsculas
+#    - Ejemplo: "ABC12345"
+
+###############################################
+### ? CHECKLIST
+###############################################
+
+# [ ] Login exitoso y obtener token
+# [ ] GET /api/Servicios funciona (público)
+# [ ] GET /api/Servicios/{id} funciona (público)
+# [ ] POST /api/Citas funciona (autenticado)
+# [ ] GET /api/Citas funciona (autenticado)
+# [ ] POST /api/Citas/{id}/confirmar funciona
+# [ ] PUT /api/Citas/{id} funciona
+# [ ] DELETE /api/Citas/{id} funciona
+# [ ] Citas solo visibles por dueño y Admin
+# [ ] Código de confirmación se genera correctamente
