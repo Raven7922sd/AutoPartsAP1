@@ -1,0 +1,61 @@
+### API de Ventas - AutoParts
+### Base URL
+@baseUrl = https://localhost:7053
+@token = YOUR_JWT_TOKEN_HERE
+
+### 1. Obtener todas las ventas del usuario autenticado
+GET {{baseUrl}}/api/ventas
+Authorization: Bearer {{token}}
+
+### 2. Obtener una venta específica por ID
+GET {{baseUrl}}/api/ventas/1
+Authorization: Bearer {{token}}
+
+### 3. Procesar compra (Checkout) - Convierte el carrito en una venta
+# Nota: Esto procesará todos los items del carrito del usuario
+# - Validará el stock disponible
+# - Creará la venta con los detalles
+# - Reducirá el inventario automáticamente
+# - Limpiará el carrito después de la compra exitosa
+POST {{baseUrl}}/api/ventas/checkout
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pago": {
+    "nombreTitular": "Juan Pérez",
+    "numeroTarjeta": "4532015112830366",
+    "fechaExpiracion": "12/25",
+    "cvv": "123",
+    "direccion": "Calle Principal #123, Santo Domingo"
+  }
+}
+
+### Ejemplo de respuesta exitosa del checkout:
+# {
+#   "ventaId": 1,
+#   "applicationUserId": "user-id-123",
+#   "fecha": "2024-01-15T10:30:00",
+#   "total": 3500.00,
+#   "detalles": [
+#     {
+#       "detalleId": 1,
+#       "productoId": 5,
+#       "productoNombre": "Filtro de Aceite",
+#       "cantidad": 2,
+#       "precioUnitario": 450.00,
+#       "subtotal": 900.00
+#     }
+#   ],
+#   "pago": {
+#     "pagoId": 1,
+#     "nombreTitular": "Juan Pérez",
+#     "numeroTarjetaEnmascarado": "**** **** **** 0366",
+#     "direccion": "Calle Principal #123, Santo Domingo"
+#   }
+# }
+
+### Errores comunes:
+# 400 Bad Request - "El carrito está vacío"
+# 400 Bad Request - "Stock insuficiente para [Producto]. Disponible: X"
+# 401 Unauthorized - "Usuario no autenticado"

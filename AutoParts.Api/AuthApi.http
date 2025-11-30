@@ -1,0 +1,215 @@
+### API de Autenticación JWT - AutoParts
+### Base URL
+@baseUrl = https://localhost:7053
+@productionUrl = https://autopartsap1-production.up.railway.app
+@token = YOUR_JWT_TOKEN_HERE
+
+###############################################
+### ?? AUTENTICACIÓN CON JWT
+###############################################
+
+### 1. Login - Obtener JWT Token
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "pedro@gmail.com",
+  "password": "Hola1234."
+}
+
+### Respuesta Esperada (JWT):
+# {
+#   "tokenType": "Bearer",
+#   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",  ? Debe comenzar con "eyJ"
+#   "expiresIn": 3600,
+#   "refreshToken": "base64-string...",
+#   "user": {
+#     "id": "...",
+#     "email": "pedro@gmail.com",
+#     "roles": ["User"]
+#   }
+# }
+
+### 2. Login en Producción
+POST {{productionUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "pedro@gmail.com",
+  "password": "Hola1234."
+}
+
+### 3. Registro - Crear usuario y obtener JWT
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "email": "nuevo@test.com",
+  "password": "Test1234!",
+  "phoneNumber": "8091234567"
+}
+
+### 4. Verificar que el JWT Token funciona - Obtener carrito
+GET {{baseUrl}}/api/carrito
+Authorization: Bearer {{token}}
+
+### 5. Verificar checkout con JWT Token
+POST {{baseUrl}}/api/Ventas/checkout
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pago": {
+    "nombreTitular": "Test Usuario",
+    "numeroTarjeta": "4532015112830366",
+    "fechaExpiracion": "12/25",
+    "cvv": "123",
+    "direccion": "Test Address"
+  }
+}
+
+###############################################
+### ?? PRUEBAS DE VALIDACIÓN
+###############################################
+
+### 6. Test: Verificar formato del token
+# Después de hacer login, copiar el accessToken y verificar:
+# - ? Debe comenzar con "eyJhbGc" (JWT Header en Base64)
+# - ? Debe tener 3 partes separadas por puntos: header.payload.signature
+# - ? Longitud típica: 200-500 caracteres
+# - ? NO debe comenzar con "CfDJ8" (ese es cookie token)
+
+### 7. Test: Decodificar JWT en jwt.io
+# 1. Ir a https://jwt.io
+# 2. Pegar el accessToken
+# 3. Verificar que contiene:
+#    - sub: userId
+#    - email: user email
+#    - nameid: userId
+#    - role: User/Admin
+#    - exp: expiration timestamp
+#    - iss: AutoPartsAPI
+#    - aud: AutoPartsApp
+
+### 8. Test: Token sin autenticación (debe fallar con 401)
+GET {{baseUrl}}/api/carrito
+
+### 9. Test: Token inválido (debe fallar con 401)
+GET {{baseUrl}}/api/carrito
+Authorization: Bearer token_invalido_123
+
+### 10. Test: Token expirado
+# Esperar 1 hora después del login y probar
+GET {{baseUrl}}/api/carrito
+Authorization: Bearer {{token}}
+
+###############################################
+### ?? COMPARACIÓN: Cookie Token vs JWT
+###############################################
+
+### ? Cookie Token (INCORRECTO - el problema anterior)
+# Ejemplo: CfDJ8PXHU2wnnCRMoZrNVCFKFcDOCZ...
+# - Comienza con: CfDJ8
+# - Longitud: 800+ caracteres
+# - Formato: Data Protection Token de ASP.NET
+# - No funciona con [Authorize] en API
+
+### ? JWT Token (CORRECTO - implementado ahora)
+# Ejemplo: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0...
+# - Comienza con: eyJhbGc
+# - Longitud: 200-500 caracteres
+# - Formato: JSON Web Token (RFC 7519)
+# - Funciona perfectamente con [Authorize]
+
+###############################################
+### ?? DEBUG: Verificar problema de Android
+###############################################
+
+### 11. Simular request de Android - Login
+POST {{productionUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "pedro@gmail.com",
+  "password": "Hola1234."
+}
+
+### 12. Copiar el accessToken de la respuesta y pegarlo aquí
+@androidToken = PEGAR_TOKEN_AQUI
+
+### 13. Usar el token en checkout (como hace Android)
+POST {{productionUrl}}/api/Ventas/checkout
+Authorization: Bearer {{androidToken}}
+Content-Type: application/json
+
+{
+  "pago": {
+    "nombreTitular": "Papolo",
+    "numeroTarjeta": "6457846518724576",
+    "fechaExpiracion": "12/25",
+    "cvv": "548",
+    "direccion": "Cotui"
+  }
+}
+
+### Resultado esperado:
+# - ? 201 Created con los datos de la venta
+# - ? Si da 404: el token aún es cookie token (no JWT)
+# - ? Si da 401: el token no está siendo enviado correctamente
+
+###############################################
+### ?? NOTAS PARA ANDROID
+###############################################
+
+# Después de esta corrección:
+# 1. El endpoint /login ahora retorna JWT real (eyJhbGc...)
+# 2. El token es más corto (200-500 chars vs 800+)
+# 3. Funciona con todos los endpoints [Authorize]
+# 4. NO se necesitan cambios en el código Android
+# 5. El AuthInterceptor funcionará automáticamente
+
+###############################################
+### ? CHECKLIST DE VERIFICACIÓN
+###############################################
+
+# [ ] Login retorna accessToken que empieza con "eyJhbGc"
+# [ ] Token tiene longitud entre 200-500 caracteres
+# [ ] Token se puede decodificar en jwt.io
+# [ ] GET /api/carrito funciona con el token
+# [ ] POST /api/Ventas/checkout retorna 201 (no 404)
+# [ ] Android puede hacer checkout sin cambios
+
+###############################################
+### ?? ENDPOINT LEGACY (por compatibilidad)
+###############################################
+
+### También funciona en /api/Users/login
+POST {{baseUrl}}/api/Users/login
+Content-Type: application/json
+
+{
+  "email": "pedro@gmail.com",
+  "password": "Hola1234."
+}
+
+###############################################
+### ?? TROUBLESHOOTING
+###############################################
+
+### Si el token sigue siendo CfDJ8...:
+# 1. Verificar que Program.cs usa JWT Authentication
+# 2. Verificar que NO hay MapIdentityApi<ApplicationUser>()
+# 3. Rebuild completo del proyecto
+# 4. Verificar logs del servidor
+
+### Si da 401 Unauthorized:
+# 1. Verificar que Authorization header está presente
+# 2. Verificar formato: "Bearer {token}"
+# 3. Verificar que el token no está expirado
+# 4. Verificar que Jwt:Secret en appsettings.json coincide
+
+### Si da 404 Not Found:
+# - Esto YA NO debe pasar con JWT real
+# - Si pasa, el token no se está enviando
+# - Verificar AuthInterceptor en Android
+

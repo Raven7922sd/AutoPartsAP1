@@ -1,0 +1,313 @@
+### ? CHECKOUT API - PRUEBAS COMPLETAS PARA ANDROID
+### Endpoint implementado: POST /api/Ventas/checkout
+### Estado: ? IMPLEMENTADO Y FUNCIONAL
+
+@baseUrl = https://localhost:7053
+@productionUrl = https://autopartsap1-production.up.railway.app
+@token = YOUR_JWT_TOKEN_HERE
+
+### ==========================================
+### PASO 1: Autenticación (Obtener Token)
+### ==========================================
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "pedro@gmail.com",
+  "password": "Hola1234."
+}
+
+### Respuesta esperada:
+# {
+#   "tokenType": "Bearer",
+#   "accessToken": "eyJhbGc...",
+#   "expiresIn": 3600,
+#   "refreshToken": "..."
+# }
+
+### ==========================================
+### PASO 2: Agregar productos al carrito
+### ==========================================
+
+### 2.1 Agregar primer producto
+POST {{baseUrl}}/api/carrito
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productoId": 1,
+  "cantidad": 2
+}
+
+### 2.2 Agregar segundo producto
+POST {{baseUrl}}/api/carrito
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productoId": 2,
+  "cantidad": 1
+}
+
+### ==========================================
+### PASO 3: Verificar carrito antes del checkout
+### ==========================================
+GET {{baseUrl}}/api/carrito
+Authorization: Bearer {{token}}
+
+### Respuesta esperada:
+# [
+#   {
+#     "carritoId": 1,
+#     "productoId": 1,
+#     "productoNombre": "Filtro de Aceite",
+#     "cantidad": 2,
+#     "precioUnitario": 450.00,
+#     "subtotal": 900.00
+#   }
+# ]
+
+### ==========================================
+### PASO 4: CHECKOUT - Procesar la compra ?
+### ==========================================
+### Este es el endpoint que la app Android está consumiendo
+
+### 4.1 Checkout Exitoso (Caso Ideal)
+POST {{baseUrl}}/api/Ventas/checkout
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pago": {
+    "nombreTitular": "Papolo",
+    "numeroTarjeta": "6457846518724576",
+    "fechaExpiracion": "12/25",
+    "cvv": "548",
+    "direccion": "Cotui"
+  }
+}
+
+### Respuesta Exitosa (201 Created):
+# {
+#   "ventaId": 1,
+#   "applicationUserId": "abc-123-def",
+#   "fecha": "2024-01-15T10:30:00",
+#   "total": 3500.00,
+#   "detalles": [
+#     {
+#       "detalleId": 1,
+#       "productoId": 1,
+#       "productoNombre": "Filtro de Aceite",
+#       "cantidad": 2.0,
+#       "precioUnitario": 450.00,
+#       "subtotal": 900.00
+#     },
+#     {
+#       "detalleId": 2,
+#       "productoId": 2,
+#       "productoNombre": "Pastillas de Freno",
+#       "cantidad": 1.0,
+#       "precioUnitario": 2600.00,
+#       "subtotal": 2600.00
+#     }
+#   ],
+#   "pago": {
+#     "pagoId": 1,
+#     "nombreTitular": "Papolo",
+#     "numeroTarjetaEnmascarado": "**** **** **** 4576",
+#     "direccion": "Cotui"
+#   }
+# }
+
+### 4.2 Checkout con datos alternativos
+POST {{baseUrl}}/api/Ventas/checkout
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pago": {
+    "nombreTitular": "Juan Pérez",
+    "numeroTarjeta": "4532015112830366",
+    "fechaExpiracion": "06/26",
+    "cvv": "123",
+    "direccion": "Av. Duarte, Santo Domingo"
+  }
+}
+
+### ==========================================
+### PASO 5: Verificar que el carrito se vació
+### ==========================================
+GET {{baseUrl}}/api/carrito
+Authorization: Bearer {{token}}
+
+### Respuesta esperada: [] (carrito vacío)
+
+### ==========================================
+### PASO 6: Obtener historial de ventas
+### ==========================================
+GET {{baseUrl}}/api/Ventas
+Authorization: Bearer {{token}}
+
+### ==========================================
+### PASO 7: Obtener detalles de una venta específica
+### ==========================================
+GET {{baseUrl}}/api/Ventas/1
+Authorization: Bearer {{token}}
+
+### ==========================================
+### ?? CASOS DE ERROR - VALIDACIONES
+### ==========================================
+
+### ERROR 1: Carrito vacío (400 Bad Request)
+POST {{baseUrl}}/api/Ventas/checkout
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pago": {
+    "nombreTitular": "Test Usuario",
+    "numeroTarjeta": "4532015112830366",
+    "fechaExpiracion": "12/25",
+    "cvv": "123",
+    "direccion": "Test Address"
+  }
+}
+
+### Respuesta esperada:
+# Status: 400 Bad Request
+# Body: "El carrito está vacío"
+
+### ERROR 2: Usuario no autenticado (401 Unauthorized)
+POST {{baseUrl}}/api/Ventas/checkout
+Content-Type: application/json
+
+{
+  "pago": {
+    "nombreTitular": "Test Usuario",
+    "numeroTarjeta": "4532015112830366",
+    "fechaExpiracion": "12/25",
+    "cvv": "123",
+    "direccion": "Test Address"
+  }
+}
+
+### Respuesta esperada:
+# Status: 401 Unauthorized
+# Body: "Usuario no autenticado"
+
+### ERROR 3: Datos de pago inválidos (400 Bad Request)
+POST {{baseUrl}}/api/Ventas/checkout
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pago": {
+    "nombreTitular": "",
+    "numeroTarjeta": "123",
+    "fechaExpiracion": "invalid",
+    "cvv": "12",
+    "direccion": ""
+  }
+}
+
+### ==========================================
+### ?? PRUEBAS EN PRODUCCIÓN (RAILWAY)
+### ==========================================
+
+### PROD 1: Health Check
+GET {{productionUrl}}/health
+
+### PROD 2: Login en producción
+POST {{productionUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "pedro@gmail.com",
+  "password": "Hola1234."
+}
+
+### PROD 3: Checkout en producción
+POST {{productionUrl}}/api/Ventas/checkout
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pago": {
+    "nombreTitular": "Papolo",
+    "numeroTarjeta": "6457846518724576",
+    "fechaExpiracion": "12/25",
+    "cvv": "548",
+    "direccion": "Cotui"
+  }
+}
+
+### ==========================================
+### ?? CHECKLIST DE VALIDACIÓN
+### ==========================================
+# ? 1. Usuario autenticado (token válido)
+# ? 2. Carrito con items
+# ? 3. Stock suficiente de todos los productos
+# ? 4. Datos de pago válidos
+# ? 5. Transacción atómica (todo o nada)
+# ? 6. Reducción de inventario automática
+# ? 7. Limpieza del carrito post-checkout
+# ? 8. Número de tarjeta enmascarado en respuesta
+# ? 9. Creación de venta con detalles
+# ? 10. Creación de registro de pago
+
+### ==========================================
+### ?? VERIFICACIONES POST-CHECKOUT
+### ==========================================
+
+### 1. Verificar que el inventario se redujo
+GET {{baseUrl}}/api/Productos/1
+Authorization: Bearer {{token}}
+
+### 2. Verificar que el carrito está vacío
+GET {{baseUrl}}/api/carrito
+Authorization: Bearer {{token}}
+
+### 3. Verificar que la venta fue creada
+GET {{baseUrl}}/api/Ventas
+Authorization: Bearer {{token}}
+
+### ==========================================
+### ?? NOTAS IMPORTANTES PARA ANDROID
+### ==========================================
+# 
+# 1. ENDPOINT CORRECTO:
+#    POST https://autopartsap1-production.up.railway.app/api/Ventas/checkout
+#
+# 2. HEADERS REQUERIDOS:
+#    - Authorization: Bearer {token}
+#    - Content-Type: application/json
+#
+# 3. BODY JSON EXACTO:
+#    {
+#      "pago": {
+#        "nombreTitular": "string",
+#        "numeroTarjeta": "string (13-19 dígitos)",
+#        "fechaExpiracion": "string (MM/YY)",
+#        "cvv": "string (3-4 dígitos)",
+#        "direccion": "string"
+#      }
+#    }
+#
+# 4. FLUJO COMPLETO:
+#    a) Login ? Obtener token
+#    b) Agregar productos al carrito
+#    c) Ejecutar checkout
+#    d) Manejar respuesta (201 o error)
+#
+# 5. MANEJO DE ERRORES:
+#    - 400: Validar mensaje (carrito vacío, stock insuficiente, datos inválidos)
+#    - 401: Re-autenticar usuario
+#    - 500: Mostrar error genérico, reintentar
+#
+# 6. IMPORTANTE:
+#    - El carrito se limpia automáticamente después del checkout exitoso
+#    - El inventario se reduce automáticamente
+#    - La transacción es atómica (si falla algo, nada se guarda)
+#    - El número de tarjeta se enmascara en la respuesta
+#
+### ==========================================

@@ -4,6 +4,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace AutoParts.Api.Controllers;
 
@@ -14,15 +19,18 @@ public class UsersController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly ILogger<UsersController> _logger;
+    private readonly IConfiguration _configuration;
 
     public UsersController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        ILogger<UsersController> logger)
+        ILogger<UsersController> logger,
+        IConfiguration configuration)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _logger = logger;
+        _configuration = configuration;
     }
 
     // GET: api/Users
@@ -158,7 +166,7 @@ public class UsersController : ControllerBase
     // POST: api/Users/login
     [HttpPost("login")]
     [AllowAnonymous]
-    public async Task<ActionResult<UserDto>> Login([FromBody] LoginDto loginDto)
+    public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginDto loginDto)
     {
         try
         {
@@ -167,32 +175,51 @@ public class UsersController : ControllerBase
 
             var user = await _userManager.FindByEmailAsync(loginDto.Email);
             if (user == null)
+            {
+                _logger.LogWarning("Login attempt failed: User not found - {Email}", loginDto.Email);
                 return Unauthorized("Email o contraseña incorrectos");
+            }
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, lockoutOnFailure: true);
 
             if (result.Succeeded)
             {
+                // Generar JWT Token
+                var jwtToken = GenerateJwtToken(user);
+                var refreshToken = GenerateRefreshToken();
+                
                 var roles = await _userManager.GetRolesAsync(user);
-                var userDto = new UserDto
+
+                var loginResponse = new LoginResponse
                 {
-                    Id = user.Id,
-                    UserName = user.UserName,
-                    Email = user.Email,
-                    PhoneNumber = user.PhoneNumber,
-                    EmailConfirmed = user.EmailConfirmed,
-                    Roles = roles.ToList()
+                    TokenType = "Bearer",
+                    AccessToken = jwtToken,
+                    ExpiresIn = 3600, // 1 hora
+                    RefreshToken = refreshToken,
+                    User = new UserDto
+                    {
+                        Id = user.Id,
+                        UserName = user.UserName,
+                        Email = user.Email,
+                        PhoneNumber = user.PhoneNumber,
+                        EmailConfirmed = user.EmailConfirmed,
+                        Roles = roles.ToList()
+                    }
                 };
 
-                _logger.LogInformation("Usuario {Email} inició sesión exitosamente", user.Email);
-                return Ok(userDto);
+                _logger.LogInformation("User {Email} logged in successfully. Token: {TokenPrefix}...", 
+                    user.Email, jwtToken.Substring(0, Math.Min(30, jwtToken.Length)));
+
+                return Ok(loginResponse);
             }
 
             if (result.IsLockedOut)
             {
+                _logger.LogWarning("User account locked out - {Email}", loginDto.Email);
                 return BadRequest("La cuenta está bloqueada. Intente más tarde.");
             }
 
+            _logger.LogWarning("Login attempt failed: Invalid password - {Email}", loginDto.Email);
             return Unauthorized("Email o contraseña incorrectos");
         }
         catch (Exception ex)
@@ -200,6 +227,55 @@ public class UsersController : ControllerBase
             _logger.LogError(ex, "Error al iniciar sesión");
             return StatusCode(500, "Error al iniciar sesión");
         }
+    }
+
+    // Método para generar JWT Token
+    private string GenerateJwtToken(ApplicationUser user)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        
+        var jwtSecret = _configuration["Jwt:Secret"] 
+            ?? "AutoPartsSecretKeyForJwtTokenGeneration2024MustBeAtLeast32CharactersLong!";
+        var key = Encoding.ASCII.GetBytes(jwtSecret);
+        
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+            new Claim(ClaimTypes.Name, user.UserName ?? user.Email ?? string.Empty),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+        
+        // Agregar roles como claims
+        var roles = _userManager.GetRolesAsync(user).Result;
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(claims),
+            Expires = DateTime.UtcNow.AddHours(1),
+            Issuer = _configuration["Jwt:Issuer"] ?? "AutoPartsAPI",
+            Audience = _configuration["Jwt:Audience"] ?? "AutoPartsApp",
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(key),
+                SecurityAlgorithms.HmacSha256Signature)
+        };
+        
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        var jwtToken = tokenHandler.WriteToken(token);
+        
+        return jwtToken;
+    }
+
+    // Método para generar Refresh Token
+    private string GenerateRefreshToken()
+    {
+        var randomNumber = new byte[64];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        return Convert.ToBase64String(randomNumber);
     }
 
     // PUT: api/Users/{id}

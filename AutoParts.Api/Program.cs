@@ -1,7 +1,10 @@
 using AutoParts.Shared.Data;
 using AutoParts.Shared.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,12 +36,17 @@ if (string.IsNullOrEmpty(conStr))
 }
 
 builder.Services.AddDbContextFactory<ApplicationDbContext>(o => o.UseSqlServer(conStr));
+builder.Services.AddDbContext<ApplicationDbContext>(o => o.UseSqlServer(conStr));
 
 // Add Identity
-builder.Services.AddIdentityCore<ApplicationUser>()
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+})
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddApiEndpoints();
+    .AddSignInManager()
+    .AddDefaultTokenProviders();
 
 // Register Services
 builder.Services.AddScoped<ProductoService>();
@@ -58,7 +66,35 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddAuthentication().AddBearerToken(IdentityConstants.BearerScheme);
+// Configure JWT Authentication
+var jwtSecret = builder.Configuration["Jwt:Secret"] 
+    ?? Environment.GetEnvironmentVariable("JWT_SECRET") 
+    ?? "AutoPartsSecretKeyForJwtTokenGeneration2024MustBeAtLeast32CharactersLong!";
+
+var key = Encoding.ASCII.GetBytes(jwtSecret);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "AutoPartsAPI",
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["Jwt:Audience"] ?? "AutoPartsApp",
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
 builder.Services.AddAuthorizationBuilder();
 
 var app = builder.Build();
@@ -85,7 +121,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoParts API V1");
-        c.RoutePrefix = string.Empty; // Swagger en la raíz (http://localhost:5022)
+        c.RoutePrefix = string.Empty;
     });
 }
 else
@@ -104,7 +140,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapIdentityApi<ApplicationUser>();
 
 // Health check endpoint
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
