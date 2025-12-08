@@ -4,6 +4,8 @@ public class VentaResponseDto
 {
     public int VentaId { get; set; }
     public string ApplicationUserId { get; set; } = string.Empty;
+    public string? NombreUsuario { get; set; }
+    public string? EmailUsuario { get; set; }
     public DateTime Fecha { get; set; }
     public double Total { get; set; }
     public List<VentaDetalleResponseDto> Detalles { get; set; } = new();

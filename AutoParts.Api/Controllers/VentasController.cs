@@ -34,6 +34,9 @@ public class VentasController : ControllerBase
         return $"**** **** **** {numeroTarjeta[^4..]}";
     }
 
+    /// <summary>
+    /// Obtiene todas las ventas del usuario autenticado
+    /// </summary>
     [HttpGet]
     public async Task<ActionResult<List<VentaResponseDto>>> GetVentas()
     {
@@ -84,6 +87,176 @@ public class VentasController : ControllerBase
         {
             _logger.LogError(ex, "Error al obtener las ventas");
             return StatusCode(500, "Error al obtener las ventas");
+        }
+    }
+
+    /// <summary>
+    /// Obtiene todas las ventas de todos los usuarios (Solo Admin)
+    /// </summary>
+    [HttpGet("todas")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<object>> GetTodasLasVentas(
+        [FromQuery] int pagina = 1,
+        [FromQuery] int tamanoPagina = 10,
+        [FromQuery] DateTime? fechaDesde = null,
+        [FromQuery] DateTime? fechaHasta = null,
+        [FromQuery] string? usuarioId = null)
+    {
+        try
+        {
+            var query = _context.Ventas
+                .Include(v => v.VentasDetalles)
+                    .ThenInclude(d => d.Producto)
+                .Include(v => v.VentasDetalles)
+                    .ThenInclude(d => d.Pago)
+                .Include(v => v.Usuario)
+                .AsQueryable();
+
+            // Filtrar por usuario si se proporciona
+            if (!string.IsNullOrEmpty(usuarioId))
+                query = query.Where(v => v.ApplicationUserId == usuarioId);
+
+            // Filtrar por rango de fechas
+            if (fechaDesde.HasValue)
+                query = query.Where(v => v.Fecha >= fechaDesde.Value);
+            
+            if (fechaHasta.HasValue)
+                query = query.Where(v => v.Fecha <= fechaHasta.Value);
+
+            query = query.OrderByDescending(v => v.Fecha);
+
+            var totalVentas = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalVentas / (double)tamanoPagina);
+
+            var ventas = await query
+                .Skip((pagina - 1) * tamanoPagina)
+                .Take(tamanoPagina)
+                .ToListAsync();
+
+            var ventasDto = ventas.Select(v => new VentaResponseDto
+            {
+                VentaId = v.VentaId,
+                ApplicationUserId = v.ApplicationUserId,
+                NombreUsuario = v.Usuario?.UserName ?? "Usuario desconocido",
+                EmailUsuario = v.Usuario?.Email ?? "",
+                Fecha = v.Fecha,
+                Total = v.Total,
+                Detalles = v.VentasDetalles.Select(d => new VentaDetalleResponseDto
+                {
+                    DetalleId = d.Id,
+                    ProductoId = d.ProductoId,
+                    ProductoNombre = d.Producto?.ProductoNombre ?? "Producto no disponible",
+                    Cantidad = d.Cantidad,
+                    PrecioUnitario = d.PrecioUnitario,
+                    Subtotal = d.Cantidad * d.PrecioUnitario
+                }).ToList(),
+                Pago = v.VentasDetalles.FirstOrDefault()?.Pago != null
+                    ? new PagoInfoDto
+                    {
+                        PagoId = v.VentasDetalles.First().Pago.PagoId,
+                        NombreTitular = v.VentasDetalles.First().Pago.NombreTitular,
+                        NumeroTarjetaEnmascarado = EnmascararTarjeta(v.VentasDetalles.First().Pago.NumeroTarjeta),
+                        Direccion = v.VentasDetalles.First().Pago.Direccion
+                    }
+                    : new PagoInfoDto()
+            }).ToList();
+
+            var totalIngresos = await query.SumAsync(v => v.Total);
+
+            return Ok(new
+            {
+                ventas = ventasDto,
+                paginaActual = pagina,
+                totalPaginas = totalPages,
+                totalVentas = totalVentas,
+                totalIngresos = totalIngresos
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener todas las ventas");
+            return StatusCode(500, "Error al obtener las ventas");
+        }
+    }
+
+    /// <summary>
+    /// Obtiene estadísticas de ventas (Solo Admin)
+    /// </summary>
+    [HttpGet("estadisticas")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<object>> GetEstadisticas(
+        [FromQuery] DateTime? fechaDesde = null,
+        [FromQuery] DateTime? fechaHasta = null)
+    {
+        try
+        {
+            var query = _context.Ventas.AsQueryable();
+
+            if (fechaDesde.HasValue)
+                query = query.Where(v => v.Fecha >= fechaDesde.Value);
+            
+            if (fechaHasta.HasValue)
+                query = query.Where(v => v.Fecha <= fechaHasta.Value);
+
+            var totalVentas = await query.CountAsync();
+            var totalIngresos = await query.SumAsync(v => (decimal?)v.Total) ?? 0;
+            var promedioVenta = totalVentas > 0 ? totalIngresos / totalVentas : 0;
+
+            var ventasPorMes = await query
+                .GroupBy(v => new { v.Fecha.Year, v.Fecha.Month })
+                .Select(g => new
+                {
+                    Año = g.Key.Year,
+                    Mes = g.Key.Month,
+                    TotalVentas = g.Count(),
+                    TotalIngresos = g.Sum(v => v.Total)
+                })
+                .OrderByDescending(x => x.Año)
+                .ThenByDescending(x => x.Mes)
+                .Take(12)
+                .ToListAsync();
+
+            // Obtener detalles de ventas para calcular productos más vendidos
+            var detallesQuery = _context.Ventas
+                .SelectMany(v => v.VentasDetalles)
+                .Include(d => d.Producto)
+                .AsQueryable();
+
+            if (fechaDesde.HasValue)
+                detallesQuery = detallesQuery.Where(d => d.Venta.Fecha >= fechaDesde.Value);
+            
+            if (fechaHasta.HasValue)
+                detallesQuery = detallesQuery.Where(d => d.Venta.Fecha <= fechaHasta.Value);
+
+            var productosMasVendidos = await detallesQuery
+                .GroupBy(d => new { d.ProductoId, d.Producto!.ProductoNombre })
+                .Select(g => new
+                {
+                    ProductoId = g.Key.ProductoId,
+                    ProductoNombre = g.Key.ProductoNombre,
+                    CantidadVendida = g.Sum(d => d.Cantidad),
+                    TotalIngresos = g.Sum(d => d.Cantidad * d.PrecioUnitario)
+                })
+                .OrderByDescending(x => x.CantidadVendida)
+                .Take(10)
+                .ToListAsync();
+
+            return Ok(new
+            {
+                resumen = new
+                {
+                    totalVentas = totalVentas,
+                    totalIngresos = totalIngresos,
+                    promedioVenta = promedioVenta
+                },
+                ventasPorMes = ventasPorMes,
+                productosMasVendidos = productosMasVendidos
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener estadísticas de ventas");
+            return StatusCode(500, "Error al obtener estadísticas");
         }
     }
 

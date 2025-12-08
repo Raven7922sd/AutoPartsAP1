@@ -59,3 +59,130 @@ Content-Type: application/json
 # 400 Bad Request - "El carrito está vacío"
 # 400 Bad Request - "Stock insuficiente para [Producto]. Disponible: X"
 # 401 Unauthorized - "Usuario no autenticado"
+
+### Ventas API Tests
+
+@baseUrl = https://autopartsap1-production.up.railway.app
+@token = YOUR_JWT_TOKEN_HERE
+
+### 1. Login como usuario normal
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "pedro@gmail.com",
+  "password": "Hola1234."
+}
+
+### 2. Login como administrador
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "johan@gmail.com",
+  "password": "Hola1234."
+}
+
+### 3. Obtener mis ventas (usuario autenticado)
+GET {{baseUrl}}/api/Ventas
+Authorization: Bearer {{token}}
+
+### 4. Obtener una venta específica
+GET {{baseUrl}}/api/Ventas/1
+Authorization: Bearer {{token}}
+
+### 5. Procesar checkout (crear nueva venta)
+POST {{baseUrl}}/api/Ventas/checkout
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pago": {
+    "nombreTitular": "Pedro González",
+    "numeroTarjeta": "4532123456789012",
+    "fechaExpiracion": "12/25",
+    "cvv": "123",
+    "direccion": "Calle Principal 123, Santo Domingo"
+  }
+}
+
+### ==========================================
+### ENDPOINTS DE ADMINISTRADOR
+### ==========================================
+
+### 6. Obtener todas las ventas (Solo Admin) - Sin filtros
+GET {{baseUrl}}/api/Ventas/todas
+Authorization: Bearer {{token}}
+
+### 7. Obtener todas las ventas con paginación
+GET {{baseUrl}}/api/Ventas/todas?pagina=1&tamanoPagina=10
+Authorization: Bearer {{token}}
+
+### 8. Filtrar ventas por rango de fechas
+GET {{baseUrl}}/api/Ventas/todas?fechaDesde=2025-01-01&fechaHasta=2025-12-31
+Authorization: Bearer {{token}}
+
+### 9. Filtrar ventas por usuario específico
+GET {{baseUrl}}/api/Ventas/todas?usuarioId=USER_ID_HERE
+Authorization: Bearer {{token}}
+
+### 10. Filtrar ventas con todos los parámetros
+GET {{baseUrl}}/api/Ventas/todas?pagina=1&tamanoPagina=20&fechaDesde=2025-01-01&fechaHasta=2025-12-31&usuarioId=USER_ID_HERE
+Authorization: Bearer {{token}}
+
+### 11. Obtener estadísticas de ventas (Solo Admin)
+GET {{baseUrl}}/api/Ventas/estadisticas
+Authorization: Bearer {{token}}
+
+### 12. Obtener estadísticas con rango de fechas
+GET {{baseUrl}}/api/Ventas/estadisticas?fechaDesde=2025-01-01&fechaHasta=2025-12-31
+Authorization: Bearer {{token}}
+
+### ==========================================
+### RESPUESTAS ESPERADAS
+### ==========================================
+
+# Respuesta de "Obtener todas las ventas":
+# {
+#   "ventas": [
+#     {
+#       "ventaId": 1,
+#       "applicationUserId": "user-id-123",
+#       "nombreUsuario": "pedro@gmail.com",
+#       "emailUsuario": "pedro@gmail.com",
+#       "fecha": "2025-12-07T20:00:00",
+#       "total": 1500.50,
+#       "detalles": [...],
+#       "pago": {...}
+#     }
+#   ],
+#   "paginaActual": 1,
+#   "totalPaginas": 5,
+#   "totalVentas": 45,
+#   "totalIngresos": 67890.50
+# }
+
+# Respuesta de "Estadísticas":
+# {
+#   "resumen": {
+#     "totalVentas": 100,
+#     "totalIngresos": 150000.00,
+#     "promedioVenta": 1500.00
+#   },
+#   "ventasPorMes": [
+#     {
+#       "año": 2025,
+#       "mes": 12,
+#       "totalVentas": 25,
+#       "totalIngresos": 35000.00
+#     }
+#   ],
+#   "productosMasVendidos": [
+#     {
+#       "productoId": 1,
+#       "productoNombre": "Aceite Mobil 1",
+#       "cantidadVendida": 150,
+#       "totalIngresos": 15000.00
+#     }
+#   ]
+# }

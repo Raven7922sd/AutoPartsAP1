@@ -234,7 +234,7 @@ public class CitasController : ControllerBase
     /// Confirma una cita (Solo Admin o dueño de la cita)
     /// </summary>
     [HttpPost("{citaId}/confirmar")]
-    public async Task<ActionResult> ConfirmarCita(int citaId)
+    public async Task<ActionResult<CitaDto>> ConfirmarCita(int citaId)
     {
         try
         {
@@ -256,9 +256,23 @@ public class CitasController : ControllerBase
             if (!resultado)
                 return BadRequest(new { message = "Error al confirmar la cita" });
 
+            // Recargar la cita para obtener el estado actualizado
+            var citaActualizada = await _citaService.GetCitaByIdAsync(citaId);
+
+            var citaDto = new CitaDto
+            {
+                CitaId = citaActualizada!.CitaId,
+                ClienteNombre = citaActualizada.ClienteNombre,
+                ApplicationUserId = citaActualizada.ApplicationUserId,
+                ServicioSolicitado = citaActualizada.ServicioSolicitado,
+                FechaCita = citaActualizada.FechaCita,
+                Confirmada = citaActualizada.Confirmada,
+                CodigoConfirmacion = citaActualizada.CodigoConfirmacion
+            };
+
             _logger.LogInformation("Cita {CitaId} confirmada por usuario {UserId}", citaId, userId);
 
-            return Ok(new { message = "Cita confirmada exitosamente" });
+            return Ok(citaDto);
         }
         catch (Exception ex)
         {
