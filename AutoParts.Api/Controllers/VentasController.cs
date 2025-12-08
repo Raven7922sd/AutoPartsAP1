@@ -31,7 +31,7 @@ public class VentasController : ControllerBase
         if (string.IsNullOrEmpty(numeroTarjeta) || numeroTarjeta.Length < 4)
             return "****";
 
-        return $"**** **** **** {numeroTarjeta[^4..]}";
+        return $"**** **** **** {numeroTarjeta.Substring(numeroTarjeta.Length - 4)}";
     }
 
     /// <summary>
@@ -206,12 +206,12 @@ public class VentasController : ControllerBase
                 .GroupBy(v => new { v.Fecha.Year, v.Fecha.Month })
                 .Select(g => new
                 {
-                    Año = g.Key.Year,
+                    Anio = g.Key.Year,
                     Mes = g.Key.Month,
                     TotalVentas = g.Count(),
                     TotalIngresos = g.Sum(v => v.Total)
                 })
-                .OrderByDescending(x => x.Año)
+                .OrderByDescending(x => x.Anio)
                 .ThenByDescending(x => x.Mes)
                 .Take(12)
                 .ToListAsync();
@@ -255,8 +255,8 @@ public class VentasController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al obtener estadísticas de ventas");
-            return StatusCode(500, "Error al obtener estadísticas");
+            _logger.LogError(ex, "Error al obtener estadisticas de ventas");
+            return StatusCode(500, "Error al obtener estadisticas");
         }
     }
 
@@ -335,7 +335,7 @@ public class VentasController : ControllerBase
                 .ToListAsync();
 
             if (!carritoItems.Any())
-                return BadRequest("El carrito está vacío");
+                return BadRequest("El carrito esta vacio");
 
             foreach (var item in carritoItems)
             {
